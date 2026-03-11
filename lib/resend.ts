@@ -59,6 +59,29 @@ export async function sendWarmLeadAlert(params: {
   })
 }
 
+export async function sendOutreachEmail(params: {
+  to: string
+  subject: string
+  body: string
+  senderName: string
+  replyTo?: string
+}) {
+  return getResend().emails.send({
+    from: `${params.senderName} via Pipeloop <outreach@pipeloop.ai>`,
+    to: params.to,
+    subject: params.subject,
+    reply_to: params.replyTo,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; line-height: 1.6;">
+        ${params.body.split('\n').map(p => `<p>${p}</p>`).join('')}
+        <p style="margin-top: 32px; font-size: 11px; color: #999;">
+          <a href="mailto:outreach@pipeloop.ai?subject=Unsubscribe" style="color: #999;">Unsubscribe</a>
+        </p>
+      </div>
+    `,
+  })
+}
+
 export async function sendReviewQueueAlert(params: {
   toEmail: string
   pendingCount: number

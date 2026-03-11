@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Zap,
   ClipboardCheck,
+  GitBranch,
 } from 'lucide-react'
 
 interface SidebarNavProps {
@@ -24,6 +25,7 @@ interface SidebarNavProps {
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/pipeline', label: 'Pipeline', icon: GitBranch },
   { href: '/dashboard/leads', label: 'Leads', icon: Users },
   { href: '/dashboard/review', label: 'Review Queue', icon: ClipboardCheck },
   { href: '/dashboard/campaigns', label: 'Campaigns', icon: Megaphone, comingSoon: true },
