@@ -115,6 +115,18 @@ export default function LandingPage() {
         <p className="mt-4 text-xs" style={{ color: '#555566' }}>
           14-day free trial · No credit card · Magic link login
         </p>
+
+        <div className="mt-4">
+          <a
+            href="/demo"
+            className="text-sm underline transition-colors"
+            style={{ color: '#555566' }}
+            onMouseEnter={e => { (e.target as HTMLElement).style.color = '#a0a0b0' }}
+            onMouseLeave={e => { (e.target as HTMLElement).style.color = '#555566' }}
+          >
+            Bekijk eerst de app →
+          </a>
+        </div>
       </section>
 
       {/* Social proof */}
