@@ -2,94 +2,93 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Check, ChevronRight, Calendar, Zap, Users, Target, Brain, Search, Send, MessageSquare } from 'lucide-react'
+import { Check, Calendar, Zap, Users, Target, Brain, Search, Send, MessageSquare } from 'lucide-react'
 
-// Simulated live agent activity feed
 const AGENT_EVENTS = [
-  { agent: 'Nova', color: '#00d4aa', icon: '🔍', msg: 'Nieuwe lead gevonden: Mark de Vries, CCO @ Coolblue' },
-  { agent: 'Alexander', color: '#a78bfa', icon: '✍️', msg: 'LinkedIn bericht geschreven voor Mark de Vries' },
-  { agent: 'Nova', color: '#00d4aa', icon: '🔍', msg: 'Lead verrijkt: 120 medewerkers, €15M omzet, groeit 40%' },
-  { agent: 'Alexander', color: '#a78bfa', icon: '📧', msg: 'E-mail sequence gestart: 4 berichten ingepland' },
-  { agent: 'Nova', color: '#00d4aa', icon: '🎯', msg: 'Pijnpunt geïdentificeerd: geen schaalbare outreach structuur' },
-  { agent: 'Alexander', color: '#a78bfa', icon: '📄', msg: 'Whitepaper gegenereerd op maat voor Coolblue' },
-  { agent: 'Nova', color: '#00d4aa', icon: '🔍', msg: 'Nieuwe lead gevonden: Lisa Bakker, CMO @ Bol.com' },
-  { agent: 'Alexander', color: '#a78bfa', icon: '🌐', msg: 'Gepersonaliseerde landingspagina aangemaakt voor Lisa Bakker' },
-  { agent: 'Nova', color: '#00d4aa', icon: '📊', msg: 'Score 87/100 — Mark de Vries reageert op LinkedIn' },
-  { agent: 'Alexander', color: '#a78bfa', icon: '📅', msg: 'Calendly-link verstuurd naar Mark de Vries' },
+  { agent: 'Nova', color: '#00d4aa', icon: '🔍', msg: 'New lead found: Mark de Vries, Chief Commercial Officer at Coolblue' },
+  { agent: 'Alexander', color: '#a78bfa', icon: '✍️', msg: 'LinkedIn message written for Mark de Vries' },
+  { agent: 'Nova', color: '#00d4aa', icon: '🔍', msg: 'Lead enriched: 120 employees, €15M revenue, growing 40% year over year' },
+  { agent: 'Alexander', color: '#a78bfa', icon: '📧', msg: 'Email sequence started: 4 messages scheduled over 14 days' },
+  { agent: 'Nova', color: '#00d4aa', icon: '🎯', msg: 'Pain point identified: no scalable outreach structure in place' },
+  { agent: 'Alexander', color: '#a78bfa', icon: '📄', msg: 'Custom whitepaper generated for Coolblue' },
+  { agent: 'Nova', color: '#00d4aa', icon: '🔍', msg: 'New lead found: Lisa Bakker, Chief Marketing Officer at Bol.com' },
+  { agent: 'Alexander', color: '#a78bfa', icon: '🌐', msg: 'Personalized landing page created for Lisa Bakker' },
+  { agent: 'Nova', color: '#00d4aa', icon: '📊', msg: 'Score 87 out of 100 — Mark de Vries replied on LinkedIn' },
+  { agent: 'Alexander', color: '#a78bfa', icon: '📅', msg: 'Calendly link sent to Mark de Vries — meeting booked' },
 ]
 
 const JOURNEY_STEPS = [
   {
     icon: Target,
     color: '#00d4aa',
-    title: 'ICP',
+    title: 'Ideal Customer Profile',
     agent: null,
     agentLabel: null,
-    desc: 'Jij definieert eenmalig je ideale klant: sector, functie, bedrijfsgrootte.',
-    output: 'ICP opgeslagen',
+    desc: 'You define your ideal customer once: industry, role, company size.',
+    output: 'Profile saved',
   },
   {
     icon: Search,
     color: '#00d4aa',
-    title: 'Lead vinden',
+    title: 'Find leads',
     agent: 'Nova',
-    agentLabel: 'Nova zoekt',
-    desc: 'Nova zoekt dagelijks LinkedIn naar ICP-matches. Volledig automatisch.',
-    output: 'Mark de Vries, CCO @ Coolblue',
+    agentLabel: 'Nova searches',
+    desc: 'Nova scans LinkedIn daily for matching profiles. Fully automatic.',
+    output: 'Mark de Vries, Chief Commercial Officer at Coolblue',
   },
   {
     icon: Brain,
     color: '#00d4aa',
-    title: 'Verrijken',
+    title: 'Enrich',
     agent: 'Nova',
-    agentLabel: 'Nova analyseert',
-    desc: 'Nova verrijkt de lead: bedrijfsgrootte, pijnpunten, recente activiteit.',
-    output: '120 medewerkers · groeit 40% · geen outreach systeem',
+    agentLabel: 'Nova analyses',
+    desc: 'Nova enriches the lead: company size, pain points, recent activity.',
+    output: '120 employees · growing 40% · no outreach system',
   },
   {
     icon: MessageSquare,
     color: '#a78bfa',
     title: 'LinkedIn',
     agent: 'Alexander',
-    agentLabel: 'Alexander schrijft',
-    desc: 'Alexander schrijft een gepersonaliseerd connectieverzoek + DM op basis van het pijnpunt.',
-    output: '"Hoi Mark, zag je bijdrage over salesgroei..."',
+    agentLabel: 'Alexander writes',
+    desc: 'Alexander writes a personalised connection request and direct message based on the pain point.',
+    output: '"Hi Mark, saw your post about scaling sales..."',
   },
   {
     icon: Send,
     color: '#a78bfa',
-    title: 'E-mail',
+    title: 'Email',
     agent: 'Alexander',
-    agentLabel: 'Alexander plant in',
-    desc: 'Parallel start een 4-staps drip sequence — volledig gepersonaliseerd.',
-    output: '4 e-mails ingepland over 14 dagen',
+    agentLabel: 'Alexander schedules',
+    desc: 'A 4-step drip sequence runs in parallel — fully personalised.',
+    output: '4 emails scheduled over 14 days',
   },
   {
     icon: Users,
     color: '#60a5fa',
-    title: 'Jij reviewt',
+    title: 'You review',
     agent: null,
-    agentLabel: 'Jouw goedkeuring',
-    desc: 'Alle berichten komen in jouw review queue. Goedkeuren in 15 minuten.',
-    output: '✓ Goedgekeurd → verstuurd',
+    agentLabel: 'Your approval',
+    desc: 'All messages land in your review queue. Approve in 15 minutes.',
+    output: '✓ Approved — sent',
   },
   {
     icon: Zap,
     color: '#f59e0b',
     title: 'Follow-up',
     agent: 'Alexander',
-    agentLabel: 'Alexander optimaliseert',
-    desc: 'Alexander analyseert reacties en stuurt follow-ups op het juiste moment.',
-    output: 'Mark reageert → score 87/100',
+    agentLabel: 'Alexander optimises',
+    desc: 'Alexander analyses replies and sends follow-ups at the right moment.',
+    output: 'Mark replied — score 87 out of 100',
   },
   {
     icon: Calendar,
     color: '#34d399',
-    title: 'Afspraak',
+    title: 'Meeting booked',
     agent: null,
-    agentLabel: 'Deal!',
-    desc: 'Pipeloop stuurt een Calendly-link. Mark boekt een demo-afspraak.',
-    output: '📅 Demo ingepland: 13 maart, 10:00',
+    agentLabel: 'Done!',
+    desc: 'Pipeloop sends a Calendly link. Mark books a demo.',
+    output: '📅 Demo booked: March 13, 10:00',
   },
 ]
 
@@ -98,28 +97,20 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [activeEvent, setActiveEvent] = useState(0)
   const [activeStep, setActiveStep] = useState(0)
   const [visibleEvents, setVisibleEvents] = useState<typeof AGENT_EVENTS>([])
 
-  // Cycle through agent events
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveEvent(prev => {
-        const next = (prev + 1) % AGENT_EVENTS.length
-        setVisibleEvents(evts => {
-          const updated = [AGENT_EVENTS[next], ...evts].slice(0, 5)
-          return updated
-        })
-        return next
-      })
-    }, 2200)
-    // Seed initial
     setVisibleEvents(AGENT_EVENTS.slice(0, 3))
+    let index = 3
+    const interval = setInterval(() => {
+      const next = AGENT_EVENTS[index % AGENT_EVENTS.length]
+      setVisibleEvents(evts => [next, ...evts].slice(0, 5))
+      index++
+    }, 2200)
     return () => clearInterval(interval)
   }, [])
 
-  // Animate journey steps
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep(prev => (prev + 1) % JOURNEY_STEPS.length)
@@ -170,19 +161,19 @@ export default function LandingPage() {
           style={{ backgroundColor: 'rgba(0,212,170,0.08)', color: '#00d4aa', border: '1px solid rgba(0,212,170,0.2)' }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-[#00d4aa] animate-pulse inline-block" />
-          AI agents actief · 2 leads gevonden vandaag
+          AI agents running · 2 leads found today
         </div>
 
         <h1 className="text-5xl sm:text-7xl font-bold leading-tight mb-6 tracking-tight">
-          Van ICP tot<br />
-          <span style={{ color: '#00d4aa' }}>geboekte afspraak.</span>
+          From ideal customer profile<br />
+          <span style={{ color: '#00d4aa' }}>to booked meeting.</span>
         </h1>
 
         <p className="text-xl mb-3 max-w-2xl mx-auto" style={{ color: '#a0a0b0', lineHeight: '1.7' }}>
-          Twee AI agents — Nova en Alexander — vinden jouw ideale klanten, schrijven gepersonaliseerde outreach en boeken afspraken voor je.
+          Two AI agents — Nova and Alexander — find your ideal customers, write personalised outreach, and book meetings for you.
         </p>
         <p className="text-lg mb-10 font-semibold">
-          Jij besteedt er <span style={{ color: '#00d4aa' }}>15 minuten per dag</span> aan.
+          You spend <span style={{ color: '#00d4aa' }}>15 minutes a day</span> on it.
         </p>
 
         {sent ? (
@@ -190,8 +181,8 @@ export default function LandingPage() {
             <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(0,212,170,0.15)' }}>
               <Check className="w-6 h-6" style={{ color: '#00d4aa' }} />
             </div>
-            <p className="font-semibold">Check je inbox!</p>
-            <p className="text-sm" style={{ color: '#a0a0b0' }}>Magic link verstuurd naar <span className="text-white">{email}</span></p>
+            <p className="font-semibold">Check your inbox!</p>
+            <p className="text-sm" style={{ color: '#a0a0b0' }}>Magic link sent to <span className="text-white">{email}</span></p>
           </div>
         ) : (
           <div>
@@ -200,7 +191,7 @@ export default function LandingPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="jouw@bedrijf.nl"
+                placeholder="you@company.com"
                 required
                 className="flex-1 px-4 py-3.5 rounded-xl text-white placeholder:text-[#555566] outline-none"
                 style={{ backgroundColor: '#111118', border: '1px solid #222233', fontSize: '15px' }}
@@ -213,22 +204,21 @@ export default function LandingPage() {
                 className="px-6 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50 whitespace-nowrap"
                 style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}
               >
-                {loading ? 'Versturen...' : 'Start gratis trial →'}
+                {loading ? 'Sending...' : 'Start free trial →'}
               </button>
             </form>
             {error && <p className="text-sm mb-2" style={{ color: '#f87171' }}>{error}</p>}
             <p className="text-xs" style={{ color: '#555566' }}>
-              14 dagen gratis · Geen creditcard ·{' '}
-              <a href="/demo" style={{ color: '#a0a0b0', textDecoration: 'underline' }}>Bekijk eerst de app</a>
+              14 days free · No credit card ·{' '}
+              <a href="/demo" style={{ color: '#a0a0b0', textDecoration: 'underline' }}>See the app first</a>
             </p>
           </div>
         )}
       </section>
 
-      {/* LIVE AGENT ACTIVITY FEED */}
+      {/* Live agent activity feed */}
       <section className="max-w-4xl mx-auto px-6 pb-16">
         <div className="rounded-2xl border overflow-hidden" style={{ backgroundColor: '#0d0d14', borderColor: '#1a1a28' }}>
-          {/* Terminal header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b" style={{ backgroundColor: '#111118', borderColor: '#1a1a28' }}>
             <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
             <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
@@ -236,11 +226,10 @@ export default function LandingPage() {
             <span className="ml-3 text-xs font-mono" style={{ color: '#555566' }}>pipeloop · agent dashboard · live</span>
             <span className="ml-auto flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#00d4aa' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-[#00d4aa] animate-pulse inline-block" />
-              ACTIEF
+              RUNNING
             </span>
           </div>
 
-          {/* Agent status bars */}
           <div className="grid grid-cols-2 gap-px" style={{ backgroundColor: '#1a1a28' }}>
             <div className="px-4 py-3" style={{ backgroundColor: '#0d0d14' }}>
               <div className="flex items-center gap-2 mb-1">
@@ -248,7 +237,7 @@ export default function LandingPage() {
                 <span className="text-xs font-bold" style={{ color: '#00d4aa' }}>NOVA</span>
                 <span className="text-xs" style={{ color: '#555566' }}>· Lead Intelligence Agent</span>
               </div>
-              <div className="text-xs" style={{ color: '#a0a0b0' }}>Zoekt LinkedIn · verrijkt leads · scoort prioriteit</div>
+              <div className="text-xs" style={{ color: '#a0a0b0' }}>Scans LinkedIn · enriches leads · scores priority</div>
             </div>
             <div className="px-4 py-3" style={{ backgroundColor: '#0d0d14' }}>
               <div className="flex items-center gap-2 mb-1">
@@ -256,11 +245,10 @@ export default function LandingPage() {
                 <span className="text-xs font-bold" style={{ color: '#a78bfa' }}>ALEXANDER</span>
                 <span className="text-xs" style={{ color: '#555566' }}>· Outreach Agent</span>
               </div>
-              <div className="text-xs" style={{ color: '#a0a0b0' }}>Schrijft berichten · plant follow-ups · boekt afspraken</div>
+              <div className="text-xs" style={{ color: '#a0a0b0' }}>Writes messages · schedules follow-ups · books meetings</div>
             </div>
           </div>
 
-          {/* Live log */}
           <div className="px-4 py-3 space-y-2 min-h-[160px]">
             {visibleEvents.map((evt, i) => (
               <div
@@ -268,7 +256,7 @@ export default function LandingPage() {
                 className="flex items-start gap-3 text-xs font-mono"
                 style={{ opacity: 1 - i * 0.18, transition: 'opacity 0.5s' }}
               >
-                <span style={{ color: '#333344' }}>{String(new Date().getHours()).padStart(2,'0')}:{String(Math.max(0, new Date().getMinutes() - i * 2)).padStart(2,'0')}</span>
+                <span style={{ color: '#333344' }}>{String(new Date().getHours()).padStart(2, '0')}:{String(Math.max(0, new Date().getMinutes() - i * 2)).padStart(2, '0')}</span>
                 <span className="font-bold shrink-0" style={{ color: evt.color }}>[{evt.agent}]</span>
                 <span style={{ color: i === 0 ? '#e0e0f0' : '#a0a0b0' }}>{evt.icon} {evt.msg}</span>
               </div>
@@ -277,16 +265,14 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* JOURNEY: ICP → BOOKED MEETING */}
+      {/* Journey: ideal customer profile → booked meeting */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Van ICP tot geboekte afspraak</h2>
-          <p className="text-lg" style={{ color: '#a0a0b0' }}>Elke stap is geautomatiseerd. De AI agents verbeteren doorlopend op basis van resultaten.</p>
+          <h2 className="text-4xl font-bold mb-4">From ideal customer profile to booked meeting</h2>
+          <p className="text-lg" style={{ color: '#a0a0b0' }}>Every step is automated. The agents continuously improve based on results.</p>
         </div>
 
-        {/* Steps timeline */}
         <div className="relative">
-          {/* Connecting line */}
           <div
             className="absolute top-8 left-0 right-0 h-px hidden lg:block"
             style={{ background: 'linear-gradient(90deg, transparent, #1a1a28 5%, #1a1a28 95%, transparent)', zIndex: 0 }}
@@ -299,7 +285,6 @@ export default function LandingPage() {
               const isPast = i < activeStep
               return (
                 <div key={step.title} className="flex flex-col items-center text-center">
-                  {/* Icon circle */}
                   <div
                     className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 transition-all duration-500 relative"
                     style={{
@@ -325,7 +310,7 @@ export default function LandingPage() {
                     )}
                   </div>
 
-                  <div className="font-bold text-xs mb-1" style={{ color: isActive ? '#ffffff' : '#a0a0b0' }}>
+                  <div className="font-bold text-xs mb-1 leading-tight" style={{ color: isActive ? '#ffffff' : '#a0a0b0' }}>
                     {step.title}
                   </div>
 
@@ -343,23 +328,21 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Arrow showing full flow result */}
         <div className="mt-12 rounded-2xl p-6 border text-center" style={{ backgroundColor: 'rgba(52,211,153,0.04)', borderColor: 'rgba(52,211,153,0.2)' }}>
           <div className="text-4xl mb-3">📅</div>
-          <div className="text-2xl font-bold mb-2" style={{ color: '#34d399' }}>Demo ingepland: 13 maart, 10:00</div>
-          <div className="text-sm" style={{ color: '#a0a0b0' }}>Mark de Vries, CCO @ Coolblue · ICP-match 94% · 8 touchpoints over 12 dagen</div>
+          <div className="text-2xl font-bold mb-2" style={{ color: '#34d399' }}>Demo booked: March 13, 10:00</div>
+          <div className="text-sm" style={{ color: '#a0a0b0' }}>Mark de Vries, Chief Commercial Officer at Coolblue · 94% ideal customer profile match · 8 touchpoints over 12 days</div>
         </div>
       </section>
 
-      {/* HOW AGENTS IMPROVE */}
+      {/* Agents improve over time */}
       <section className="max-w-5xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">De agents worden slimmer</h2>
-          <p className="text-lg" style={{ color: '#a0a0b0' }}>Elke reactie, goedkeuring en afgewezen bericht leert de agents. Ze optimaliseren automatisch.</p>
+          <h2 className="text-4xl font-bold mb-4">The agents get smarter over time</h2>
+          <p className="text-lg" style={{ color: '#a0a0b0' }}>Every reply, approval and rejection teaches the agents. They optimise automatically.</p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6">
-          {/* Nova card */}
           <div className="rounded-2xl border p-6" style={{ backgroundColor: '#0d0d14', borderColor: '#1a1a28' }}>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ backgroundColor: 'rgba(0,212,170,0.1)', border: '1px solid rgba(0,212,170,0.2)' }}>
@@ -371,16 +354,16 @@ export default function LandingPage() {
               </div>
               <div className="ml-auto flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-[#00d4aa] animate-pulse" />
-                <span className="text-xs font-semibold" style={{ color: '#00d4aa' }}>ACTIEF</span>
+                <span className="text-xs font-semibold" style={{ color: '#00d4aa' }}>ACTIVE</span>
               </div>
             </div>
 
             <div className="space-y-3">
               {[
-                { label: 'Leads gevonden vandaag', value: '3', color: '#00d4aa' },
-                { label: 'Gemiddelde ICP-score', value: '88/100', color: '#00d4aa' },
-                { label: 'LinkedIn profilen gescand', value: '847', color: '#a0a0b0' },
-                { label: 'Pijnpunten geïdentificeerd', value: '3 van 3', color: '#00d4aa' },
+                { label: 'Leads found today', value: '3', color: '#00d4aa' },
+                { label: 'Average profile match score', value: '88 / 100', color: '#00d4aa' },
+                { label: 'LinkedIn profiles scanned', value: '847', color: '#a0a0b0' },
+                { label: 'Pain points identified', value: '3 of 3', color: '#00d4aa' },
               ].map(m => (
                 <div key={m.label} className="flex items-center justify-between text-sm">
                   <span style={{ color: '#a0a0b0' }}>{m.label}</span>
@@ -390,12 +373,11 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-5 p-3 rounded-xl text-xs" style={{ backgroundColor: '#111118', border: '1px solid #1a1a28' }}>
-              <div className="font-bold mb-1" style={{ color: '#00d4aa' }}>Meest recente actie</div>
-              <div style={{ color: '#a0a0b0' }}>🔍 Lisa Bakker (CMO @ Bol.com) gevonden — score 91/100. Pijnpunt: handmatige lead opvolging kost 2 uur/dag.</div>
+              <div className="font-bold mb-1" style={{ color: '#00d4aa' }}>Most recent action</div>
+              <div style={{ color: '#a0a0b0' }}>🔍 Lisa Bakker (Chief Marketing Officer at Bol.com) found — score 91 out of 100. Pain point: manual lead follow-up takes 2 hours per day.</div>
             </div>
           </div>
 
-          {/* Alexander card */}
           <div className="rounded-2xl border p-6" style={{ backgroundColor: '#0d0d14', borderColor: '#1a1a28' }}>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ backgroundColor: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)' }}>
@@ -407,16 +389,16 @@ export default function LandingPage() {
               </div>
               <div className="ml-auto flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-[#a78bfa] animate-pulse" />
-                <span className="text-xs font-semibold" style={{ color: '#a78bfa' }}>ACTIEF</span>
+                <span className="text-xs font-semibold" style={{ color: '#a78bfa' }}>ACTIVE</span>
               </div>
             </div>
 
             <div className="space-y-3">
               {[
-                { label: 'Berichten geschreven vandaag', value: '6', color: '#a78bfa' },
-                { label: 'Goedkeuringsratio', value: '83%', color: '#a78bfa' },
-                { label: 'Open rate e-mails', value: '68%', color: '#a78bfa' },
-                { label: 'Afspraken geboekt deze week', value: '2', color: '#34d399' },
+                { label: 'Messages written today', value: '6', color: '#a78bfa' },
+                { label: 'Approval rate', value: '83%', color: '#a78bfa' },
+                { label: 'Email open rate', value: '68%', color: '#a78bfa' },
+                { label: 'Meetings booked this week', value: '2', color: '#34d399' },
               ].map(m => (
                 <div key={m.label} className="flex items-center justify-between text-sm">
                   <span style={{ color: '#a0a0b0' }}>{m.label}</span>
@@ -426,21 +408,21 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-5 p-3 rounded-xl text-xs" style={{ backgroundColor: '#111118', border: '1px solid #1a1a28' }}>
-              <div className="font-bold mb-1" style={{ color: '#a78bfa' }}>Meest recente actie</div>
-              <div style={{ color: '#a0a0b0' }}>📅 Calendly-link verstuurd naar Mark de Vries. Hij boekte een demo voor 13 maart 10:00. Conversie na 8 touchpoints.</div>
+              <div className="font-bold mb-1" style={{ color: '#a78bfa' }}>Most recent action</div>
+              <div style={{ color: '#a0a0b0' }}>📅 Calendly link sent to Mark de Vries. He booked a demo for March 13 at 10:00. Converted after 8 touchpoints.</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* PROBLEM */}
+      {/* Problem */}
       <section className="max-w-4xl mx-auto px-6 py-12 text-center">
-        <h2 className="text-3xl font-bold mb-8">Herken je dit?</h2>
+        <h2 className="text-3xl font-bold mb-8">Sound familiar?</h2>
         <div className="grid sm:grid-cols-3 gap-5 text-left">
           {[
-            { title: 'Te duur', desc: 'Een goede SDR kost €5.000–€8.000/maand. Die ook nog eens vertrekt.' },
-            { title: 'Te traag', desc: 'Handmatig leads zoeken, berichten schrijven en versturen kost weken per campagne.' },
-            { title: 'Niet schaalbaar', desc: 'Met 1 SDR bereik je 50 leads/week. Meer bereik = meer mensen = meer kosten.' },
+            { title: 'Too expensive', desc: 'A good sales development representative costs €5,000–€8,000 per month. And they leave.' },
+            { title: 'Too slow', desc: 'Finding leads, enriching them, writing messages, and sending them manually takes weeks per campaign.' },
+            { title: 'Not scalable', desc: 'One sales rep reaches 50 leads per week. More reach means more people, more cost, more chaos.' },
           ].map(p => (
             <div key={p.title} className="rounded-2xl p-6 border" style={{ backgroundColor: '#111118', borderColor: '#222233' }}>
               <div className="text-lg font-bold mb-2" style={{ color: '#f87171' }}>✕ {p.title}</div>
@@ -450,13 +432,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* STATS */}
+      {/* Stats */}
       <section className="max-w-4xl mx-auto px-6 py-12">
         <div className="grid grid-cols-3 gap-4">
           {[
-            { value: '5 leads/dag', label: 'Automatisch gevonden en verrijkt' },
-            { value: '< 15 min', label: 'Jouw dagelijkse tijdsinvestering' },
-            { value: '€0', label: 'Extra SDR-salaris nodig' },
+            { value: '5 leads / day', label: 'Found and enriched automatically' },
+            { value: '15 minutes', label: 'Your daily time investment' },
+            { value: '€0', label: 'Extra sales salary needed' },
           ].map(s => (
             <div key={s.value} className="rounded-2xl p-6 text-center border" style={{ backgroundColor: '#111118', borderColor: '#222233' }}>
               <div className="text-3xl font-bold mb-1" style={{ color: '#00d4aa' }}>{s.value}</div>
@@ -466,25 +448,25 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* PRICING */}
+      {/* Pricing */}
       <section className="max-w-4xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-center mb-4">Prijzen</h2>
-        <p className="text-center mb-12" style={{ color: '#a0a0b0' }}>Goedkoper dan één SDR. Werkt 24/7. Boekt afspraken terwijl je slaapt.</p>
+        <h2 className="text-3xl font-bold text-center mb-4">Pricing</h2>
+        <p className="text-center mb-12" style={{ color: '#a0a0b0' }}>Cheaper than one sales hire. Runs 24 hours a day. Books meetings while you sleep.</p>
         <div className="grid sm:grid-cols-3 gap-6">
           {[
             {
-              name: 'Starter', price: '€799', mo: '/mnd', leads: '1 lead/dag',
-              features: ['Nova + Alexander actief', 'LinkedIn + e-mail outreach', 'Review queue', 'AI verrijking'],
+              name: 'Starter', price: '€799', mo: ' / month', leads: '1 lead per day',
+              features: ['Nova and Alexander active', 'LinkedIn and email outreach', 'Review queue', 'AI enrichment'],
               popular: false,
             },
             {
-              name: 'Growth', price: '€1.299', mo: '/mnd', leads: '2 leads/dag',
-              features: ['Alles uit Starter', 'Whitepaper generatie', 'Gepersonaliseerde landingspagina', 'Calendly integratie'],
+              name: 'Growth', price: '€1,299', mo: ' / month', leads: '2 leads per day',
+              features: ['Everything in Starter', 'Whitepaper generation', 'Personalised landing pages', 'Calendly integration'],
               popular: true,
             },
             {
-              name: 'Scale', price: '€1.799', mo: '/mnd', leads: '5 leads/dag',
-              features: ['Alles uit Growth', 'Multi-channel sequenties', 'A/B testing', 'Priority support'],
+              name: 'Scale', price: '€1,799', mo: ' / month', leads: '5 leads per day',
+              features: ['Everything in Growth', 'Multi-channel sequences', 'A/B testing', 'Priority support'],
               popular: false,
             },
           ].map(plan => (
@@ -497,7 +479,7 @@ export default function LandingPage() {
               }}
             >
               {plan.popular && (
-                <div className="text-xs font-bold mb-3" style={{ color: '#00d4aa' }}>⭐ MEEST GEKOZEN</div>
+                <div className="text-xs font-bold mb-3" style={{ color: '#00d4aa' }}>⭐ MOST POPULAR</div>
               )}
               <div className="text-xl font-bold mb-1">{plan.name}</div>
               <div className="mb-1">
@@ -522,17 +504,17 @@ export default function LandingPage() {
                   border: plan.popular ? 'none' : '1px solid #00d4aa',
                 }}
               >
-                Start gratis trial
+                Start free trial
               </button>
             </div>
           ))}
         </div>
       </section>
 
-      {/* FINAL CTA */}
+      {/* Final call to action */}
       <section className="max-w-2xl mx-auto px-6 py-20 text-center">
-        <h2 className="text-4xl font-bold mb-3">Klaar om afspraken te boeken?</h2>
-        <p className="mb-8 text-lg" style={{ color: '#a0a0b0' }}>14 dagen gratis proberen. Nova en Alexander gaan meteen aan het werk.</p>
+        <h2 className="text-4xl font-bold mb-3">Ready to start booking meetings?</h2>
+        <p className="mb-8 text-lg" style={{ color: '#a0a0b0' }}>14 days free. Nova and Alexander get to work immediately.</p>
         {!sent ? (
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
             <input
@@ -540,7 +522,7 @@ export default function LandingPage() {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="jouw@bedrijf.nl"
+              placeholder="you@company.com"
               required
               className="flex-1 px-4 py-3.5 rounded-xl text-white placeholder:text-[#555566] outline-none"
               style={{ backgroundColor: '#111118', border: '1px solid #222233' }}
@@ -553,16 +535,16 @@ export default function LandingPage() {
               className="px-6 py-3.5 rounded-xl font-bold text-sm disabled:opacity-50 whitespace-nowrap"
               style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}
             >
-              {loading ? '...' : 'Start gratis →'}
+              {loading ? '...' : 'Start free →'}
             </button>
           </form>
         ) : (
-          <p className="font-semibold text-lg" style={{ color: '#00d4aa' }}>✓ Check je inbox voor de magic link!</p>
+          <p className="font-semibold text-lg" style={{ color: '#00d4aa' }}>✓ Check your inbox for the magic link!</p>
         )}
         {error && <p className="mt-2 text-sm" style={{ color: '#f87171' }}>{error}</p>}
         <p className="mt-4 text-sm" style={{ color: '#555566' }}>
-          Of liever eerst kijken?{' '}
-          <a href="/demo" style={{ color: '#a0a0b0', textDecoration: 'underline' }}>Open de interactieve demo →</a>
+          Want to see it first?{' '}
+          <a href="/demo" style={{ color: '#a0a0b0', textDecoration: 'underline' }}>Open the interactive demo →</a>
         </p>
       </section>
 
