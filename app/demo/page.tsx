@@ -87,10 +87,10 @@ export default function DemoPage() {
         body: JSON.stringify({ company }),
       })
       const data = await res.json()
-      if (data.website) setWebsite(data.website)
-      if (data.icp) setIcp(data.icp)
-      if (data.pain) setPain(data.pain)
-      if (data.solution) setSolution(data.solution)
+      setWebsite(data.website || '')
+      setIcp(data.icp || '')
+      setPain(data.pain || '')
+      setSolution(data.solution || '')
       setResearched(true)
     } catch {
       setResearched(true) // show fields anyway
