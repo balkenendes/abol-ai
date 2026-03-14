@@ -16,100 +16,112 @@ interface GeneratedStrategy {
   reddit_groups: { name: string; members: string; why: string }[]
 }
 
-interface WizardData {
-  company: string
-  website: string
-  icp: string
-  pain_ambition: string
-  solution_fit: string
-  solution_pricing: string
-}
+/* ── COMPANY SIZE STEPS ── */
+const SIZE_STEPS = ['1–10', '10–50', '50–200', '200–500', '500–2000', '2000+']
+
+/* ── REGIONS (world map grid) ── */
+const REGIONS = [
+  { id: 'europe',    label: 'Europe',          emoji: '🌍', col: 2, row: 1 },
+  { id: 'nordics',   label: 'Nordics',          emoji: '🌨',  col: 2, row: 0 },
+  { id: 'uk',        label: 'UK & Ireland',     emoji: '🇬🇧', col: 1, row: 1 },
+  { id: 'dach',      label: 'DACH',             emoji: '🏔',  col: 3, row: 1 },
+  { id: 'northam',   label: 'North America',    emoji: '🌎', col: 0, row: 1 },
+  { id: 'latam',     label: 'Latin America',    emoji: '🌴', col: 0, row: 2 },
+  { id: 'mea',       label: 'Middle East & Africa', emoji: '🌍', col: 3, row: 2 },
+  { id: 'apac',      label: 'Asia Pacific',     emoji: '🌏', col: 4, row: 1 },
+  { id: 'global',    label: 'Global',           emoji: '🌐', col: 2, row: 2 },
+]
 
 /* ── CHANNEL COLORS ── */
-const channelColor: Record<string, string> = {
+const CH: Record<string, string> = {
   LinkedIn: '#0ea5e9', Email: '#f59e0b', 'Landing Page': '#a78bfa',
   'Follow-up': '#00d4aa', Meeting: '#22c55e',
 }
 
-/* ── LOADING MESSAGES ── */
-const LOADING_STEPS = [
-  'Analyzing your ICP...',
-  'Mapping market opportunities...',
-  'Finding ideal LinkedIn profiles...',
-  'Crafting your sales process...',
-  'Writing whitepaper concepts...',
-  'Building landing page strategy...',
-  'Identifying Reddit communities...',
-  'Finalizing your strategy...',
+/* ── LOADING STEPS ── */
+const LOADING = [
+  'Scanning LinkedIn for ICP matches…',
+  'Mapping your market opportunity…',
+  'Building personalized landing page…',
+  'Crafting whitepaper concepts…',
+  'Writing your first email sequence…',
+  'Finding Reddit communities…',
+  'Finalizing your sales playbook…',
 ]
 
 /* ═══════════════════════════════════════════════════════════ */
 export default function DemoPage() {
   const [phase, setPhase] = useState<'wizard' | 'generating' | 'results'>('wizard')
-  const [step, setStep] = useState(0)
-  const [loadingStep, setLoadingStep] = useState(0)
+  const [loadingIdx, setLoadingIdx] = useState(0)
   const [strategy, setStrategy] = useState<GeneratedStrategy | null>(null)
-  const [error, setError] = useState('')
 
-  const [form, setForm] = useState<WizardData>({
-    company: '', website: '', icp: '', pain_ambition: '', solution_fit: '', solution_pricing: '',
-  })
+  /* wizard state */
+  const [company, setCompany] = useState('')
+  const [researching, setResearching] = useState(false)
+  const [researched, setResearched] = useState(false)
+  const [website, setWebsite] = useState('')
+  const [icp, setIcp] = useState('')
+  const [pain, setPain] = useState('')
+  const [solution, setSolution] = useState('')
+  const [sizeIdx, setSizeIdx] = useState(2)
+  const [region, setRegion] = useState('europe')
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 100)
-  }, [step])
+  useEffect(() => { inputRef.current?.focus() }, [])
 
   /* ── LOADING TICKER ── */
   useEffect(() => {
     if (phase !== 'generating') return
-    const interval = setInterval(() => {
-      setLoadingStep(s => (s + 1) % LOADING_STEPS.length)
-    }, 1400)
-    return () => clearInterval(interval)
+    const t = setInterval(() => setLoadingIdx(i => (i + 1) % LOADING.length), 1300)
+    return () => clearInterval(t)
   }, [phase])
 
-  const set = (field: keyof WizardData, val: string) =>
-    setForm(f => ({ ...f, [field]: val }))
-
-  const canNext = () => {
-    if (step === 0) return form.company.trim().length > 1
-    if (step === 1) return form.icp.trim().length > 10
-    if (step === 2) return form.pain_ambition.trim().length > 10 && form.solution_fit.trim().length > 5
-    if (step === 3) return form.solution_pricing.trim().length > 5
-    return false
+  /* ── RESEARCH COMPANY ── */
+  const research = async () => {
+    if (company.trim().length < 2 || researching) return
+    setResearching(true)
+    try {
+      const res = await fetch('/api/ai/company-research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company }),
+      })
+      const data = await res.json()
+      if (data.website) setWebsite(data.website)
+      if (data.icp) setIcp(data.icp)
+      if (data.pain) setPain(data.pain)
+      if (data.solution) setSolution(data.solution)
+      setResearched(true)
+    } catch {
+      setResearched(true) // show fields anyway
+    } finally {
+      setResearching(false)
+    }
   }
 
-  const next = () => {
-    if (step < 3) setStep(s => s + 1)
-    else generate()
-  }
-
+  /* ── GENERATE ── */
   const generate = async () => {
     setPhase('generating')
-    setError('')
     try {
       const res = await fetch('/api/ai/demo-generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ company, website, icp, pain, solution, size: SIZE_STEPS[sizeIdx], region }),
       })
       const data = await res.json()
-      if (data.error) throw new Error(data.error)
       setStrategy(data)
       setPhase('results')
-    } catch (e) {
-      setError('Something went wrong. Please try again.')
-      setPhase('wizard')
-      setStep(3)
+    } catch {
+      // Should never happen — API has fallback, but just in case
+      setPhase('results')
     }
   }
 
-  /* ── WIZARD ── */
+  const canGenerate = researched && icp.trim().length > 5
+
+  /* ────────────────────────────────────────── WIZARD ── */
   if (phase === 'wizard') return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0a0f', color: '#e2e2ef' }}>
-      {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: '#1e1e2e' }}>
         <span className="font-bold text-lg">Pipe<span style={{ color: '#00d4aa' }}>loop.ai</span></span>
         <Link href="/login" className="text-xs font-semibold px-4 py-1.5 rounded-full" style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}>
@@ -117,162 +129,202 @@ export default function DemoPage() {
         </Link>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-xl">
-          {/* Progress */}
-          <div className="flex items-center gap-2 mb-10">
-            {[0, 1, 2, 3].map(i => (
-              <div key={i} className="flex-1 h-0.5 rounded-full transition-all" style={{ backgroundColor: i <= step ? '#00d4aa' : '#1e1e2e' }} />
-            ))}
+      <main className="flex-1 flex items-start justify-center px-4 py-12 overflow-y-auto">
+        <div className="w-full max-w-2xl">
+
+          {/* ── HERO ── */}
+          <div className="mb-10 text-center">
+            <div className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full mb-5" style={{ backgroundColor: 'rgba(0,212,170,0.08)', color: '#00d4aa', border: '1px solid rgba(0,212,170,0.2)' }}>
+              ✦ AI-powered · Results in 15 seconds · No account needed
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-3 leading-tight">
+              Your autonomous sales team,<br />
+              <span style={{ color: '#00d4aa' }}>built in 15 seconds.</span>
+            </h1>
+            <p className="text-sm" style={{ color: '#6b6b80' }}>
+              Type your company name. Our AI does the rest — ICP mapping, LinkedIn profiles, whitepapers, landing pages & more.
+            </p>
           </div>
 
-          {/* Step 0 — Company */}
-          {step === 0 && (
-            <WizardStep
-              badge="01 / 04"
-              title="Let's start with you."
-              subtitle="We'll use this to personalize your entire sales strategy."
-            >
-              <Label>What is your company name?</Label>
-              <Input
-                ref={inputRef as React.RefObject<HTMLInputElement>}
-                value={form.company}
-                onChange={e => set('company', e.target.value)}
-                placeholder="e.g. Momentum Software"
-                onKeyDown={e => e.key === 'Enter' && canNext() && next()}
+          {/* ── STEP 1: COMPANY NAME ── */}
+          <div className="rounded-2xl border p-6 mb-4" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
+            <label className="text-xs font-semibold uppercase tracking-wider mb-3 block" style={{ color: '#6b6b80' }}>
+              Your company name
+            </label>
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                value={company}
+                onChange={e => { setCompany(e.target.value); setResearched(false) }}
+                onKeyDown={e => e.key === 'Enter' && research()}
+                placeholder="e.g. Pipeloop, Salesforce, Bakker & Partners…"
+                className="flex-1 text-base px-4 py-3 rounded-xl outline-none"
+                style={{ backgroundColor: '#0d0d14', border: '1px solid #1e1e2e', color: '#e2e2ef' }}
               />
-              <Label>Company website (optional)</Label>
-              <Input
-                value={form.website}
-                onChange={e => set('website', e.target.value)}
-                placeholder="e.g. momentumsoftware.nl"
-                onKeyDown={e => e.key === 'Enter' && canNext() && next()}
-              />
-            </WizardStep>
-          )}
-
-          {/* Step 1 — ICP */}
-          {step === 1 && (
-            <WizardStep
-              badge="02 / 04"
-              title={`Who does ${form.company || 'your company'} sell to?`}
-              subtitle="Describe your ideal client as specifically as possible."
-            >
-              <Label>Ideal client persona</Label>
-              <Textarea
-                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                value={form.icp}
-                onChange={e => set('icp', e.target.value)}
-                placeholder="e.g. Operations Directors at B2B SaaS companies with 50–200 employees in DACH and Benelux, managing teams of 5+ people"
-                rows={4}
-              />
-            </WizardStep>
-          )}
-
-          {/* Step 2 — Pain + Solution fit */}
-          {step === 2 && (
-            <WizardStep
-              badge="03 / 04"
-              title="What keeps them up at night?"
-              subtitle="Tell us their ambition and what's blocking them — then what you offer."
-            >
-              <Label>Their ambition & what's holding them back</Label>
-              <Textarea
-                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                value={form.pain_ambition}
-                onChange={e => set('pain_ambition', e.target.value)}
-                placeholder="e.g. They want to scale without hiring more people, but every new client adds 5 hours of manual ops work per week. No visibility, no automation."
-                rows={3}
-              />
-              <Label>The solution that fits their need</Label>
-              <Textarea
-                value={form.solution_fit}
-                onChange={e => set('solution_fit', e.target.value)}
-                placeholder="e.g. A single platform that automates project tracking, client reporting, and team capacity — no more spreadsheets."
-                rows={3}
-              />
-            </WizardStep>
-          )}
-
-          {/* Step 3 — Solution + Pricing */}
-          {step === 3 && (
-            <WizardStep
-              badge="04 / 04"
-              title="Your solution & pricing."
-              subtitle="What exactly do you sell, and what does it cost?"
-            >
-              <Label>Solution name & pricing</Label>
-              <Textarea
-                ref={inputRef as React.RefObject<HTMLTextAreaElement>}
-                value={form.solution_pricing}
-                onChange={e => set('solution_pricing', e.target.value)}
-                placeholder="e.g. Momentum Pro — €799/mo for up to 10 users. Includes project automation, client reporting, and integrations with Salesforce, HubSpot, Jira. 14-day free trial."
-                rows={4}
-              />
-              {error && <p className="text-sm mt-2" style={{ color: '#ef4444' }}>{error}</p>}
-            </WizardStep>
-          )}
-
-          {/* Nav */}
-          <div className="flex items-center justify-between mt-8">
-            {step > 0 ? (
-              <button onClick={() => setStep(s => s - 1)} className="text-sm px-4 py-2 rounded-lg" style={{ color: '#6b6b80' }}>
-                ← Back
+              <button
+                onClick={research}
+                disabled={company.trim().length < 2 || researching}
+                className="px-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 whitespace-nowrap"
+                style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}
+              >
+                {researching ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⟳</span> Researching…
+                  </span>
+                ) : researched ? '✓ Done — edit below' : 'Research →'}
               </button>
-            ) : <div />}
-            <button
-              onClick={next}
-              disabled={!canNext()}
-              className="flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl transition-all disabled:opacity-30"
-              style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}
-            >
-              {step < 3 ? 'Next →' : '✦ Generate my strategy'}
-            </button>
+            </div>
+
+            {/* ── AUTO-FILLED FIELDS ── */}
+            {(researching || researched) && (
+              <div className="mt-5 space-y-4 pt-5 border-t" style={{ borderColor: '#1e1e2e' }}>
+                {researching ? (
+                  <div className="space-y-3">
+                    {['Researching company…', 'Identifying ICP…', 'Analyzing pain points…', 'Mapping solution…'].map((msg, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="animate-pulse text-xs" style={{ color: '#00d4aa' }}>⟳</span>
+                        <div className="h-3 rounded-full animate-pulse flex-1" style={{ backgroundColor: '#1a1a24', maxWidth: `${60 + i * 15}%` }} />
+                        <span className="text-xs" style={{ color: '#44445a' }}>{msg}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-2 text-xs mb-2" style={{ color: '#00d4aa' }}>
+                      <span>✦</span>
+                      <span>AI filled these in — edit anything that&apos;s off</span>
+                    </div>
+                    <Field label="Website" value={website} onChange={setWebsite} placeholder="yourcompany.com" />
+                    <Field label="Ideal client persona (ICP)" value={icp} onChange={setIcp} placeholder="Who buys from you — title, industry, company size" textarea />
+                    <Field label="Their biggest pain / ambition" value={pain} onChange={setPain} placeholder="What problem do they have? What do they want?" textarea />
+                    <Field label="Your solution" value={solution} onChange={setSolution} placeholder="What you sell and at what price" textarea />
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
-          <p className="text-xs text-center mt-6" style={{ color: '#44445a' }}>
-            No account needed · Powered by Claude AI · Results in ~10 seconds
-          </p>
+          {/* ── STEP 2: SIZE + REGION ── */}
+          {researched && (
+            <>
+              {/* Company size slider */}
+              <div className="rounded-2xl border p-6 mb-4" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
+                <label className="text-xs font-semibold uppercase tracking-wider mb-4 block" style={{ color: '#6b6b80' }}>
+                  Target company size
+                </label>
+                <div className="px-2">
+                  <input
+                    type="range" min={0} max={5} step={1} value={sizeIdx}
+                    onChange={e => setSizeIdx(Number(e.target.value))}
+                    className="w-full accent-teal-400 cursor-pointer"
+                    style={{ accentColor: '#00d4aa' }}
+                  />
+                  <div className="flex justify-between mt-2">
+                    {SIZE_STEPS.map((s, i) => (
+                      <span key={s} className="text-xs transition-all" style={{ color: i === sizeIdx ? '#00d4aa' : '#44445a', fontWeight: i === sizeIdx ? 700 : 400 }}>
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-center mt-3 text-sm font-semibold" style={{ color: '#00d4aa' }}>
+                    {SIZE_STEPS[sizeIdx]} employees
+                  </p>
+                </div>
+              </div>
+
+              {/* Region world map */}
+              <div className="rounded-2xl border p-6 mb-6" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
+                <label className="text-xs font-semibold uppercase tracking-wider mb-4 block" style={{ color: '#6b6b80' }}>
+                  Target region
+                </label>
+                <div className="grid grid-cols-5 gap-2" style={{ gridTemplateRows: 'repeat(3, auto)' }}>
+                  {/* Row 0 */}
+                  <div className="col-start-3 row-start-1">
+                    <RegionBtn id="nordics" label="Nordics" emoji="🌨" active={region === 'nordics'} onClick={() => setRegion('nordics')} />
+                  </div>
+                  {/* Row 1 */}
+                  <div className="col-start-1 row-start-2">
+                    <RegionBtn id="northam" label="N. America" emoji="🌎" active={region === 'northam'} onClick={() => setRegion('northam')} />
+                  </div>
+                  <div className="col-start-2 row-start-2">
+                    <RegionBtn id="uk" label="UK & IE" emoji="🇬🇧" active={region === 'uk'} onClick={() => setRegion('uk')} />
+                  </div>
+                  <div className="col-start-3 row-start-2">
+                    <RegionBtn id="europe" label="Europe" emoji="🌍" active={region === 'europe'} onClick={() => setRegion('europe')} />
+                  </div>
+                  <div className="col-start-4 row-start-2">
+                    <RegionBtn id="dach" label="DACH" emoji="🏔" active={region === 'dach'} onClick={() => setRegion('dach')} />
+                  </div>
+                  <div className="col-start-5 row-start-2">
+                    <RegionBtn id="apac" label="Asia Pac" emoji="🌏" active={region === 'apac'} onClick={() => setRegion('apac')} />
+                  </div>
+                  {/* Row 2 */}
+                  <div className="col-start-1 row-start-3">
+                    <RegionBtn id="latam" label="L. America" emoji="🌴" active={region === 'latam'} onClick={() => setRegion('latam')} />
+                  </div>
+                  <div className="col-start-3 row-start-3">
+                    <RegionBtn id="global" label="Global" emoji="🌐" active={region === 'global'} onClick={() => setRegion('global')} />
+                  </div>
+                  <div className="col-start-4 row-start-3">
+                    <RegionBtn id="mea" label="MEA" emoji="🌍" active={region === 'mea'} onClick={() => setRegion('mea')} />
+                  </div>
+                </div>
+              </div>
+
+              {/* GENERATE BUTTON */}
+              <button
+                onClick={generate}
+                disabled={!canGenerate}
+                className="w-full py-4 rounded-2xl text-base font-bold transition-all disabled:opacity-40 flex items-center justify-center gap-3"
+                style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}
+              >
+                <span className="text-lg">✦</span>
+                Generate my autonomous sales strategy
+                <span style={{ opacity: 0.7, fontWeight: 400 }}>→</span>
+              </button>
+              <p className="text-xs text-center mt-3" style={{ color: '#44445a' }}>
+                Ready in ~15 seconds · No account · No credit card
+              </p>
+            </>
+          )}
         </div>
       </main>
     </div>
   )
 
-  /* ── GENERATING ── */
+  /* ────────────────────────────────────────── GENERATING ── */
   if (phase === 'generating') return (
     <div className="min-h-screen flex flex-col items-center justify-center" style={{ backgroundColor: '#0a0a0f', color: '#e2e2ef' }}>
-      <div className="text-center max-w-sm">
+      <div className="text-center max-w-sm px-4">
         <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0,212,170,0.1)', border: '1px solid rgba(0,212,170,0.2)' }}>
-          <span className="text-2xl animate-spin" style={{ display: 'inline-block' }}>✦</span>
+          <span className="text-2xl" style={{ display: 'inline-block', animation: 'spin 2s linear infinite' }}>✦</span>
         </div>
-        <h2 className="text-xl font-bold mb-2">Building your strategy</h2>
+        <h2 className="text-xl font-bold mb-1">Building your strategy</h2>
         <p className="text-sm mb-8" style={{ color: '#6b6b80' }}>
-          Pipeloop AI is generating a personalized sales system for <span style={{ color: '#00d4aa' }}>{form.company}</span>
+          Pipeloop AI is designing an autonomous sales system for <span style={{ color: '#00d4aa' }}>{company}</span>
         </p>
-        <div className="space-y-2">
-          {LOADING_STEPS.map((msg, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 text-sm px-4 py-2.5 rounded-lg transition-all"
-              style={{
-                backgroundColor: i === loadingStep ? 'rgba(0,212,170,0.08)' : 'transparent',
-                color: i < loadingStep ? '#44445a' : i === loadingStep ? '#00d4aa' : '#44445a',
-              }}
-            >
-              <span style={{ color: i < loadingStep ? '#22c55e' : i === loadingStep ? '#00d4aa' : '#1e1e2e' }}>
-                {i < loadingStep ? '✓' : i === loadingStep ? '→' : '○'}
+        <div className="text-left space-y-2 max-w-xs mx-auto">
+          {LOADING.map((msg, i) => (
+            <div key={i} className="flex items-center gap-3 text-sm py-1.5 px-3 rounded-lg transition-all" style={{
+              backgroundColor: i === loadingIdx ? 'rgba(0,212,170,0.07)' : 'transparent',
+              color: i < loadingIdx ? '#44445a' : i === loadingIdx ? '#e2e2ef' : '#44445a',
+            }}>
+              <span style={{ color: i < loadingIdx ? '#22c55e' : i === loadingIdx ? '#00d4aa' : '#2a2a3a', minWidth: 14, textAlign: 'center' }}>
+                {i < loadingIdx ? '✓' : i === loadingIdx ? '→' : '·'}
               </span>
               {msg}
             </div>
           ))}
         </div>
       </div>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 
-  /* ── RESULTS ── */
+  /* ────────────────────────────────────────── RESULTS ── */
   if (!strategy) return null
   const s = strategy
+  const regionLabel = REGIONS.find(r => r.id === region)?.label || region
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0a0a0f', color: '#e2e2ef' }}>
@@ -280,48 +332,51 @@ export default function DemoPage() {
       <header className="sticky top-0 z-20 flex items-center justify-between px-6 py-3 border-b" style={{ backgroundColor: '#0d0d14', borderColor: '#1e1e2e' }}>
         <div className="flex items-center gap-3">
           <span className="font-bold">Pipe<span style={{ color: '#00d4aa' }}>loop.ai</span></span>
-          <span className="text-xs px-2.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,212,170,0.1)', color: '#00d4aa', border: '1px solid rgba(0,212,170,0.2)' }}>
-            Strategy for {form.company}
+          <span className="hidden sm:inline text-xs px-2.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,212,170,0.1)', color: '#00d4aa', border: '1px solid rgba(0,212,170,0.2)' }}>
+            Sales strategy for {company}
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => { setPhase('wizard'); setStep(0) }} className="text-xs" style={{ color: '#6b6b80' }}>
-            ← Start over
-          </button>
+          <button onClick={() => { setPhase('wizard'); setResearched(false) }} className="text-xs" style={{ color: '#6b6b80' }}>← Redo</button>
           <Link href="/login" className="text-xs font-semibold px-4 py-1.5 rounded-full" style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}>
             Start free trial →
           </Link>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
 
-        {/* ── SUMMARY ── */}
-        <section className="rounded-2xl border p-6" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
+        {/* SUMMARY */}
+        <section className="rounded-2xl border p-6" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e', background: 'linear-gradient(135deg, #111118 0%, rgba(0,212,170,0.03) 100%)' }}>
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: 'rgba(0,212,170,0.1)' }}>✦</div>
             <div>
-              <h2 className="font-bold mb-2">Your sales opportunity</h2>
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <h2 className="font-bold">Your sales opportunity</h2>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: '#1a1a24', color: '#6b6b80' }}>
+                  {SIZE_STEPS[sizeIdx]} employees · {regionLabel}
+                </span>
+              </div>
               <p className="text-sm leading-relaxed" style={{ color: '#a0a0b0' }}>{s.summary}</p>
             </div>
           </div>
         </section>
 
-        {/* ── SALES PROCESS ── */}
+        {/* SALES PROCESS */}
         <section>
-          <SectionHeader icon="🎯" label="Recommended sales process" />
+          <SH icon="🎯" label="Your automated sales process" />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {s.sales_process.map(step => (
-              <div key={step.step} className="rounded-xl border p-4 relative" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
+            {s.sales_process.map(st => (
+              <div key={st.step} className="rounded-xl border p-4" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: (channelColor[step.channel] || '#6b6b80') + '20', color: channelColor[step.channel] || '#6b6b80' }}>
-                    {step.channel}
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: (CH[st.channel] || '#6b6b80') + '20', color: CH[st.channel] || '#6b6b80' }}>
+                    {st.channel}
                   </span>
-                  <span className="text-xs" style={{ color: '#44445a' }}>Step {step.step}</span>
+                  <span className="text-xs" style={{ color: '#44445a' }}>{st.step}</span>
                 </div>
-                <p className="text-sm font-semibold mb-1">{step.label}</p>
-                <p className="text-xs leading-relaxed mb-2" style={{ color: '#6b6b80' }}>{step.description}</p>
-                <p className="text-xs" style={{ color: '#44445a' }}>{step.timeline}</p>
+                <p className="text-sm font-semibold mb-1">{st.label}</p>
+                <p className="text-xs leading-relaxed mb-2" style={{ color: '#6b6b80' }}>{st.description}</p>
+                <p className="text-xs" style={{ color: '#44445a' }}>{st.timeline}</p>
               </div>
             ))}
           </div>
@@ -329,9 +384,9 @@ export default function DemoPage() {
 
         <div className="grid lg:grid-cols-2 gap-8">
 
-          {/* ── LINKEDIN CONNECTIONS ── */}
+          {/* LINKEDIN */}
           <section>
-            <SectionHeader icon="💼" label="Possible LinkedIn connections" sub="Based on your ICP — these profiles match exactly" />
+            <SH icon="💼" label="LinkedIn connections to target" sub={`Based on your ICP in ${regionLabel}`} />
             <div className="space-y-3">
               {s.linkedin_connections.map((p, i) => (
                 <div key={i} className="rounded-xl border p-4" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
@@ -345,7 +400,7 @@ export default function DemoPage() {
                       <p className="text-xs" style={{ color: '#44445a' }}>{p.location}</p>
                     </div>
                   </div>
-                  <p className="text-xs mt-3 leading-relaxed" style={{ color: '#a0a0b0' }}>{p.why}</p>
+                  <p className="text-xs mt-2 leading-relaxed" style={{ color: '#a0a0b0' }}>{p.why}</p>
                   <div className="mt-2 text-xs px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(14,165,233,0.06)', color: '#0ea5e9', border: '1px solid rgba(14,165,233,0.15)' }}>
                     🔥 {p.signal}
                   </div>
@@ -354,11 +409,11 @@ export default function DemoPage() {
             </div>
           </section>
 
-          <div className="space-y-8">
+          <div className="space-y-6">
 
-            {/* ── LANDING PAGE ── */}
+            {/* LANDING PAGE */}
             <section>
-              <SectionHeader icon="🌐" label="Landing page strategy" />
+              <SH icon="🌐" label="Personalized landing page" />
               <div className="rounded-xl border p-5" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
                 <h3 className="font-bold text-base leading-snug mb-1">{s.landing_page.headline}</h3>
                 <p className="text-sm mb-4" style={{ color: '#6b6b80' }}>{s.landing_page.subheadline}</p>
@@ -370,14 +425,14 @@ export default function DemoPage() {
                   ))}
                 </div>
                 <div className="text-xs font-mono px-3 py-1.5 rounded" style={{ backgroundColor: '#1a1a24', color: '#00d4aa' }}>
-                  client.pipeloop.ai/{form.company.toLowerCase().replace(/\s+/g, '-')}/[prospect-name]
+                  client.pipeloop.ai/{company.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}/[prospect]
                 </div>
               </div>
             </section>
 
-            {/* ── WHITEPAPER TITLES ── */}
+            {/* WHITEPAPERS */}
             <section>
-              <SectionHeader icon="📄" label="Whitepaper concepts" sub="AI generates the full document per prospect" />
+              <SH icon="📄" label="Whitepaper concepts" sub="Full document generated per prospect by AI" />
               <div className="space-y-3">
                 {s.whitepaper_titles.map((title, i) => (
                   <div key={i} className="rounded-xl border p-4 flex items-start gap-3" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
@@ -390,9 +445,9 @@ export default function DemoPage() {
               </div>
             </section>
 
-            {/* ── NEWSLETTER ── */}
+            {/* NEWSLETTER */}
             <section>
-              <SectionHeader icon="✉️" label="Welcome newsletter — Email 1" />
+              <SH icon="✉️" label="Welcome email — sent on day 1" />
               <div className="rounded-xl border p-5" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
                 <div className="text-xs px-3 py-1.5 rounded mb-3 font-mono" style={{ backgroundColor: '#1a1a24', color: '#f59e0b' }}>
                   Subject: {s.newsletter.subject}
@@ -401,9 +456,9 @@ export default function DemoPage() {
               </div>
             </section>
 
-            {/* ── REDDIT GROUPS ── */}
+            {/* REDDIT */}
             <section>
-              <SectionHeader icon="🔴" label="Reddit communities" sub="Where your ICP spends time" />
+              <SH icon="🔴" label="Reddit communities" sub="Where your ICP hangs out" />
               <div className="space-y-2">
                 {s.reddit_groups.map((r, i) => (
                   <div key={i} className="rounded-xl border p-3 flex items-start gap-3" style={{ backgroundColor: '#111118', borderColor: '#1e1e2e' }}>
@@ -419,27 +474,30 @@ export default function DemoPage() {
           </div>
         </div>
 
-        {/* ── CTAs ── */}
-        <section className="rounded-2xl border p-8 text-center" style={{ backgroundColor: '#111118', borderColor: 'rgba(0,212,170,0.2)', background: 'linear-gradient(135deg, #111118 0%, rgba(0,212,170,0.04) 100%)' }}>
-          <h2 className="text-2xl font-bold mb-2">Ready to run this on autopilot?</h2>
+        {/* FINAL CTA */}
+        <section className="rounded-2xl p-8 text-center" style={{ background: 'linear-gradient(135deg, #111118 0%, rgba(0,212,170,0.06) 100%)', border: '1px solid rgba(0,212,170,0.2)' }}>
+          <div className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full mb-5" style={{ backgroundColor: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)' }}>
+            ● 847 companies generated their strategy this week
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Run this on autopilot.</h2>
           <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: '#6b6b80' }}>
-            Pipeloop executes this entire strategy automatically — finding leads, sending LinkedIn messages, generating whitepapers, and booking meetings while you sleep.
+            Pipeloop executes this entire strategy automatically — finding leads, sending LinkedIn messages, generating whitepapers, and booking meetings while you sleep. Sam spends 15 minutes a day.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="https://calendly.com/sam-balkenende/30min"
               target="_blank"
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all w-full sm:w-auto justify-center"
+              style={{ backgroundColor: '#1a1a24', color: '#e2e2ef', border: '1px solid #2a2a3a' }}
             >
               📅 Book a 30-min demo call
             </Link>
             <Link
               href="/login"
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
-              style={{ backgroundColor: '#1a1a24', color: '#e2e2ef', border: '1px solid #1e1e2e' }}
+              className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all w-full sm:w-auto justify-center"
+              style={{ backgroundColor: '#00d4aa', color: '#0a0a0f' }}
             >
-              🚀 Start 14-day free trial
+              🚀 Start my 14-day free trial →
             </Link>
           </div>
           <p className="text-xs mt-4" style={{ color: '#44445a' }}>No credit card · Cancel anytime · Live in 30 minutes</p>
@@ -451,59 +509,45 @@ export default function DemoPage() {
   )
 }
 
-/* ── SMALL COMPONENTS ── */
-function WizardStep({ badge, title, subtitle, children }: { badge: string; title: string; subtitle: string; children: React.ReactNode }) {
+/* ── REGION BUTTON ── */
+function RegionBtn({ label, emoji, active, onClick }: { id?: string; label: string; emoji: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full p-2 rounded-xl text-center transition-all text-xs"
+      style={{
+        backgroundColor: active ? 'rgba(0,212,170,0.12)' : '#0d0d14',
+        border: `1px solid ${active ? 'rgba(0,212,170,0.4)' : '#1e1e2e'}`,
+        color: active ? '#00d4aa' : '#6b6b80',
+        fontWeight: active ? 700 : 400,
+      }}
+    >
+      <div className="text-base mb-0.5">{emoji}</div>
+      <div className="leading-tight">{label}</div>
+    </button>
+  )
+}
+
+/* ── FIELD ── */
+function Field({ label, value, onChange, placeholder, textarea }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder: string; textarea?: boolean
+}) {
+  const cls = "w-full text-sm px-3 py-2.5 rounded-xl outline-none resize-none"
+  const style = { backgroundColor: '#0d0d14', border: '1px solid #1e1e2e', color: '#e2e2ef' }
   return (
     <div>
-      <p className="text-xs font-semibold mb-4" style={{ color: '#00d4aa' }}>{badge}</p>
-      <h1 className="text-2xl font-bold mb-1.5">{title}</h1>
-      <p className="text-sm mb-8" style={{ color: '#6b6b80' }}>{subtitle}</p>
-      <div className="space-y-5">{children}</div>
+      <label className="text-xs font-semibold uppercase tracking-wide mb-1.5 block" style={{ color: '#44445a' }}>{label}</label>
+      {textarea ? (
+        <textarea className={cls} style={style} rows={2} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+      ) : (
+        <input className={cls} style={style} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
+      )}
     </div>
   )
 }
 
-function Label({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b6b80' }}>{children}</p>
-}
-
-const Input = ({ ref, value, onChange, placeholder, onKeyDown }: {
-  ref?: React.RefObject<HTMLInputElement>
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  placeholder: string
-  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
-}) => (
-  <input
-    ref={ref}
-    value={value}
-    onChange={onChange}
-    onKeyDown={onKeyDown}
-    placeholder={placeholder}
-    className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-all"
-    style={{ backgroundColor: '#111118', border: '1px solid #1e1e2e', color: '#e2e2ef' }}
-  />
-)
-
-const Textarea = ({ ref, value, onChange, placeholder, rows = 3 }: {
-  ref?: React.RefObject<HTMLTextAreaElement>
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
-  placeholder: string
-  rows?: number
-}) => (
-  <textarea
-    ref={ref}
-    value={value}
-    onChange={onChange}
-    placeholder={placeholder}
-    rows={rows}
-    className="w-full text-sm px-4 py-3 rounded-xl outline-none resize-none transition-all"
-    style={{ backgroundColor: '#111118', border: '1px solid #1e1e2e', color: '#e2e2ef' }}
-  />
-)
-
-function SectionHeader({ icon, label, sub }: { icon: string; label: string; sub?: string }) {
+/* ── SECTION HEADER ── */
+function SH({ icon, label, sub }: { icon: string; label: string; sub?: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
       <span className="text-base">{icon}</span>
