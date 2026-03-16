@@ -17,6 +17,20 @@ interface UserProfile {
   trial_ends_at: string | null
 }
 
+interface IcpData {
+  target_title: string
+  target_industry: string
+  target_company_size: string
+  target_country: string
+  target_revenue: string
+  notes: string
+}
+
+const EMPTY_ICP: IcpData = {
+  target_title: '', target_industry: '', target_company_size: '',
+  target_country: '', target_revenue: '', notes: '',
+}
+
 const PLANS = [
   {
     id: 'starter',
@@ -48,7 +62,7 @@ const PLANS = [
   },
 ]
 
-type ActiveTab = 'account' | 'billing'
+type ActiveTab = 'account' | 'icp' | 'billing'
 
 export default function SettingsPage() {
   const supabase = createClient()
@@ -57,6 +71,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  const [icp, setIcp] = useState<IcpData>(EMPTY_ICP)
+  const [icpSaving, setIcpSaving] = useState(false)
+  const [icpSaved, setIcpSaved] = useState(false)
 
   const [name, setName] = useState('')
   const [companyName, setCompanyName] = useState('')
@@ -81,6 +99,25 @@ export default function SettingsPage() {
         setCompanyWebsite(data.company_website ?? '')
         setWhatYouSell(data.what_you_sell ?? '')
       }
+
+      // Load ICP
+      const { data: icpData } = await supabase
+        .from('user_icp')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (icpData) {
+        setIcp({
+          target_title: (icpData.target_title as string | null) ?? '',
+          target_industry: (icpData.target_industry as string | null) ?? '',
+          target_company_size: (icpData.target_company_size as string | null) ?? '',
+          target_country: (icpData.target_country as string | null) ?? '',
+          target_revenue: (icpData.target_revenue as string | null) ?? '',
+          notes: (icpData.notes as string | null) ?? '',
+        })
+      }
+
       setLoading(false)
     }
     void loadProfile()
@@ -102,6 +139,29 @@ export default function SettingsPage() {
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  async function saveIcp() {
+    setIcpSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    await supabase.from('user_icp').upsert({
+      user_id: user.id,
+      target_title: icp.target_title || null,
+      target_industry: icp.target_industry || null,
+      target_company_size: icp.target_company_size || null,
+      target_country: icp.target_country || null,
+      target_revenue: icp.target_revenue || null,
+      notes: icp.notes || null,
+    }, { onConflict: 'user_id' })
+
+    // Mark onboarding complete so Nova starts running
+    await supabase.from('users').update({ onboarding_completed: true }).eq('id', user.id)
+
+    setIcpSaving(false)
+    setIcpSaved(true)
+    setTimeout(() => setIcpSaved(false), 3000)
   }
 
   async function handleUpgrade(planId: string) {
@@ -133,7 +193,7 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 p-1 rounded-lg w-fit" style={{ backgroundColor: '#1a1a24' }}>
-        {(['account', 'billing'] as const).map(tab => (
+        {(['account', 'icp', 'billing'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -232,6 +292,102 @@ export default function SettingsPage() {
                 }
                 {saved ? 'Saved!' : 'Save Changes'}
               </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ICP tab */}
+      {activeTab === 'icp' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ideal Client Profile (ICP)</CardTitle>
+              <CardDescription>
+                Nova uses this to find leads daily via Apollo. Save this to activate the pipeline.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#a0a0b0' }}>Target job title</label>
+                  <Input
+                    value={icp.target_title}
+                    onChange={e => setIcp(p => ({ ...p, target_title: e.target.value }))}
+                    placeholder="e.g. Head of Sales, CRO, VP Operations"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#a0a0b0' }}>Industry</label>
+                  <Input
+                    value={icp.target_industry}
+                    onChange={e => setIcp(p => ({ ...p, target_industry: e.target.value }))}
+                    placeholder="e.g. B2B SaaS, Fintech, E-commerce"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#a0a0b0' }}>Company size</label>
+                  <select
+                    value={icp.target_company_size}
+                    onChange={e => setIcp(p => ({ ...p, target_company_size: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg text-sm text-white outline-none"
+                    style={{ backgroundColor: '#1a1a24', border: '1px solid #222233' }}
+                  >
+                    <option value="">Any size</option>
+                    <option value="1-10">1–10 employees</option>
+                    <option value="11-50">11–50 employees</option>
+                    <option value="51-200">51–200 employees</option>
+                    <option value="201-500">201–500 employees</option>
+                    <option value="501-1000">501–1000 employees</option>
+                    <option value="1001+">1001+ employees</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#a0a0b0' }}>Target country / region</label>
+                  <Input
+                    value={icp.target_country}
+                    onChange={e => setIcp(p => ({ ...p, target_country: e.target.value }))}
+                    placeholder="e.g. Netherlands, Germany, United Kingdom"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: '#a0a0b0' }}>Revenue / funding stage (optional)</label>
+                  <Input
+                    value={icp.target_revenue}
+                    onChange={e => setIcp(p => ({ ...p, target_revenue: e.target.value }))}
+                    placeholder="e.g. Series A, €1M–10M ARR, Bootstrapped"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: '#a0a0b0' }}>Extra criteria / notes</label>
+                <textarea
+                  value={icp.notes}
+                  onChange={e => setIcp(p => ({ ...p, notes: e.target.value }))}
+                  placeholder="e.g. Must use Salesforce, hiring SDRs, recently raised, active on LinkedIn..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg text-sm text-white placeholder:text-[#555566] outline-none resize-none"
+                  style={{ backgroundColor: '#1a1a24', border: '1px solid #222233' }}
+                />
+              </div>
+
+              <div className="flex items-center gap-4">
+                <Button onClick={saveIcp} disabled={icpSaving} className="flex items-center gap-2">
+                  {icpSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : icpSaved ? <CheckCircle2 className="w-4 h-4" /> : null}
+                  {icpSaved ? '✓ Saved & pipeline activated!' : 'Save ICP & activate pipeline'}
+                </Button>
+              </div>
+
+              <div className="rounded-lg p-4 text-sm" style={{ backgroundColor: 'rgba(0,212,170,0.05)', border: '1px solid rgba(0,212,170,0.15)' }}>
+                <p className="font-medium mb-1" style={{ color: '#00d4aa' }}>What happens after you save:</p>
+                <ul className="space-y-1 text-xs" style={{ color: '#a0a0b0' }}>
+                  <li>→ Nova searches Apollo daily at 08:00 for leads matching your ICP</li>
+                  <li>→ Each lead is enriched automatically (website + persuasion profile)</li>
+                  <li>→ Vincent generates a LinkedIn message → appears in your review queue</li>
+                  <li>→ You approve in 1 click → PhantomBuster sends it</li>
+                  <li>→ Alexander briefs you every evening at 20:00</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </div>

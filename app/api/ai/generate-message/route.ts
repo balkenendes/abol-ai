@@ -17,13 +17,15 @@ const TONE_MAP: Record<string, string> = {
 }
 
 const CHANNEL_INSTRUCTIONS: Record<Channel, string> = {
-  linkedin_request: 'Write a LinkedIn connection request. Max 300 characters. Reference one specific detail about their company. No generic messages.',
-  linkedin_dm: 'Write a LinkedIn DM sent right after they accepted the connection. Lead with value, end with one low-friction question. Max 500 characters.',
-  email_1: 'Write a cold email (day 8 of no LinkedIn reply). Subject + body. Open with an observation about their business. End with an open question — no pitch.',
-  email_2: 'Write a follow-up email (day 12). Share one concrete insight or stat relevant to their business. Clear CTA: 15-minute call.',
-  email_3: 'Write a follow-up email (day 17). Acknowledge you\'ve reached out before. Share a short resource (case study or idea). Soft ask.',
-  email_4: 'Write a final email (day 22). Close the loop gracefully. Leave the door open. No pressure.',
+  linkedin_request: 'Write a LinkedIn connection request. Max 300 characters. Reference one specific detail about their company or recent activity. Never generic.',
+  linkedin_dm: 'Write a LinkedIn DM sent right after they accepted the connection. Lead with a specific observation about their business. End with one low-friction open question. Max 500 characters. No pitch.',
+  email_1: 'Write Email 1 of the sequence — a cold outreach email. Subject + body. Open with a specific insight about their company or industry. Mention one relevant result we achieved for a similar company. End with a soft question, not a hard CTA. Max 200 words.',
+  email_2: 'Write Email 2 — a follow-up assuming Email 1 was opened but not replied to. Subject + body. Lead with a short case study or data point. Include a personalized landing page mention. End with a Calendly link suggestion. Max 150 words.',
+  email_3: 'Write Email 3 — a breakup email. Subject + body. Be direct and respectful. Say you will stop reaching out if not relevant. Give one final compelling reason. Max 80 words.',
+  email_4: 'Write Email 4 — a re-engagement email sent 30 days after email 3. Subject + body. Fresh angle, reference something new (season, industry news, their recent activity). Short and punchy. Max 100 words.',
 }
+
+const VALID_CHANNELS: Channel[] = ['linkedin_request', 'linkedin_dm', 'email_1', 'email_2', 'email_3', 'email_4']
 
 async function callWithRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
   for (let i = 0; i < retries; i++) {
@@ -43,12 +45,18 @@ async function callWithRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as { leadId?: string; channel?: Channel }
+    const body = await request.json() as { leadId?: string; channel?: string }
     const { leadId, channel } = body
 
     if (!leadId || !channel) {
       return NextResponse.json({ error: 'leadId and channel are required' }, { status: 400 })
     }
+
+    if (!VALID_CHANNELS.includes(channel as Channel)) {
+      return NextResponse.json({ error: `Invalid channel. Valid: ${VALID_CHANNELS.join(', ')}` }, { status: 400 })
+    }
+
+    const typedChannel = channel as Channel
 
     // Get lead + enrichment data
     const { data: lead, error: leadError } = await adminClient
@@ -77,10 +85,10 @@ export async function POST(request: NextRequest) {
     const whatYouSell = (userProfile?.what_you_sell as string | null) ?? 'B2B solutions'
     const profile = (lead.persuasion_profile as string | null) ?? 'driver'
     const tone = TONE_MAP[profile] ?? TONE_MAP['driver']
-    const instruction = CHANNEL_INSTRUCTIONS[channel]
+    const instruction = CHANNEL_INSTRUCTIONS[typedChannel]
     const enrichment = lead.enrichment_data as Record<string, unknown>
 
-    const needsSubject = channel.startsWith('email_')
+    const needsSubject = typedChannel.startsWith('email_')
 
     // Generate single message on demand
     const result = await callWithRetry(async () => {
@@ -121,11 +129,11 @@ Return ONLY valid JSON, no other text.`
       .insert({
         lead_id: leadId,
         user_id: lead.user_id as string,
-        channel,
+        channel: typedChannel,
         content,
         subject: subject ?? null,
         status: 'pending_review',
-        prompt_version: 1,
+        prompt_version: 2,
       })
       .select('id')
       .single()
@@ -147,7 +155,7 @@ Return ONLY valid JSON, no other text.`
     return NextResponse.json({
       success: true,
       messageId: savedMessage.id,
-      channel,
+      channel: typedChannel,
       content,
       subject,
     })

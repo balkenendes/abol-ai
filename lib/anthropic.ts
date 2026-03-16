@@ -33,14 +33,8 @@ export interface EnrichmentData {
 export interface OutreachMessages {
   linkedin_connection_request: string
   linkedin_dm: string
-  email_1_subject: string
-  email_1_body: string
-  email_2_subject: string
-  email_2_body: string
-  email_3_subject: string
-  email_3_body: string
-  email_4_subject: string
-  email_4_body: string
+  email_fallback_subject: string
+  email_fallback_body: string
 }
 
 export interface SenderInfo {
@@ -107,15 +101,9 @@ Persuasion style: ${toneMap[profile] ?? toneMap['driver']}
 Return ONLY valid JSON:
 {
   "linkedin_connection_request": "max 300 chars, personal, reference specific detail",
-  "linkedin_dm": "day 2 follow-up, value-first, ends with meeting ask",
-  "email_1_subject": "subject line",
-  "email_1_body": "day 8 email - AI intro, open question, no pitch",
-  "email_2_subject": "subject line",
-  "email_2_body": "day 12 - concrete insight, CTA 15 min?",
-  "email_3_subject": "subject line",
-  "email_3_body": "day 17 - acknowledge persistence, share resource",
-  "email_4_subject": "subject line",
-  "email_4_body": "day 22 - close loop, door open"
+  "linkedin_dm": "follow-up DM after connection accepted, value-first, ends with low-friction question",
+  "email_fallback_subject": "subject line for email when no LinkedIn available",
+  "email_fallback_body": "email body, open with observation about their business, end with open question, no hard pitch"
 }`
       }]
     })

@@ -4,6 +4,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { adminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { executeApprovedMessage } from '@/agents/vincent'
+import { sendOutreachEmail } from '@/lib/resend'
+import { publishEvent, EVENTS } from '@/lib/message-bus'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Get review queue item — must belong to this user
     const { data: review, error: reviewError } = await adminClient
       .from('review_queue')
-      .select('*, outreach_messages(*), leads(first_name, last_name, company, linkedin_url, stage)')
+      .select('*, outreach_messages(*), leads(id, first_name, last_name, company, linkedin_url, email, stage)')
       .eq('id', reviewId)
       .eq('user_id', user.id)
       .single()
@@ -37,13 +40,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Already reviewed' }, { status: 400 })
     }
 
-    const message = review.outreach_messages as { id: string; channel: string; content: string }
-    const lead = review.leads as { first_name: string; last_name: string; company: string; linkedin_url: string; stage: string }
+    const message = review.outreach_messages as { id: string; channel: string; content: string; subject: string | null }
+    const lead = review.leads as { id: string; first_name: string; last_name: string; company: string; linkedin_url: string | null; email: string | null; stage: string }
 
     // If Sam edited the content, save it
     const finalContent = editedContent?.trim() ?? message.content
 
-    // Update message
+    // Update message status to approved
     await adminClient
       .from('outreach_messages')
       .update({
@@ -67,20 +70,75 @@ export async function POST(request: NextRequest) {
       await adminClient
         .from('leads')
         .update({ stage: newStage, updated_at: new Date().toISOString() })
-        .eq('id', review.lead_id as string)
+        .eq('id', lead.id)
     }
 
-    // Log for agent tracking
+    // EXECUTE: Send the message
+    let sendResult = { success: false, error: '' }
+
+    if (message.channel === 'linkedin_request' || message.channel === 'linkedin_dm') {
+      // LinkedIn channels → Vincent sends via PhantomBuster
+      const vincentResult = await executeApprovedMessage(message.id)
+      sendResult = { success: vincentResult.success, error: vincentResult.error ?? '' }
+    } else if (message.channel === 'email_fallback') {
+      // Email fallback → send directly via Resend
+      if (lead.email) {
+        try {
+          const { data: userProfile } = await adminClient
+            .from('users')
+            .select('name, company_name, email')
+            .eq('id', user.id)
+            .single()
+
+          const senderName = (userProfile?.name as string | null) ?? 'Sales Rep'
+
+          await sendOutreachEmail({
+            to: lead.email,
+            subject: message.subject ?? `Quick question for ${lead.first_name}`,
+            body: finalContent,
+            senderName,
+            replyTo: (userProfile?.email as string | null) ?? undefined,
+          })
+
+          await adminClient
+            .from('outreach_messages')
+            .update({ status: 'sent', sent_at: new Date().toISOString() })
+            .eq('id', message.id)
+
+          sendResult = { success: true, error: '' }
+
+          await publishEvent({
+            type: EVENTS.MESSAGE_SENT,
+            from: 'system',
+            to: 'alexander',
+            payload: { messageId: message.id, channel: 'email_fallback', leadId: lead.id },
+          })
+        } catch (err) {
+          sendResult = { success: false, error: String(err) }
+        }
+      } else {
+        sendResult = { success: false, error: 'No email address for this lead' }
+      }
+    }
+
+    // Log
     await adminClient
       .from('agent_logs')
       .insert({
         agent_name: 'vincent',
-        status: 'success',
-        summary: `Message approved: ${message.channel} to ${lead.first_name} ${lead.last_name} at ${lead.company}`,
-        details: { reviewId, channel: message.channel, leadId: review.lead_id, edited: !!editedContent },
+        status: sendResult.success ? 'success' : 'warning',
+        summary: sendResult.success
+          ? `Approved and sent: ${message.channel} to ${lead.first_name} ${lead.last_name} at ${lead.company}`
+          : `Approved but send failed: ${sendResult.error}`,
+        details: { reviewId, channel: message.channel, leadId: lead.id, edited: !!editedContent, sent: sendResult.success },
       })
 
-    return NextResponse.json({ success: true, channel: message.channel })
+    return NextResponse.json({
+      success: true,
+      channel: message.channel,
+      sent: sendResult.success,
+      sendError: sendResult.success ? undefined : sendResult.error,
+    })
   } catch (error) {
     console.error('POST /api/review/approve error:', error)
     return NextResponse.json({ error: 'Failed to approve review' }, { status: 500 })
@@ -90,6 +148,6 @@ export async function POST(request: NextRequest) {
 function getStageForChannel(channel: string, currentStage: string): string {
   if (channel === 'linkedin_request' && currentStage === 'enriched') return 'contacted'
   if (channel === 'linkedin_dm' && currentStage === 'contacted') return 'connected'
-  if (channel.startsWith('email_') && currentStage === 'enriched') return 'contacted'
+  if (channel === 'email_fallback' && currentStage === 'enriched') return 'contacted'
   return currentStage
 }

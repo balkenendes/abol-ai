@@ -165,15 +165,15 @@ export default function LandingPage() {
         </div>
 
         <h1 className="text-5xl sm:text-7xl font-bold leading-tight mb-6 tracking-tight">
-          From ideal customer profile<br />
-          <span style={{ color: '#00d4aa' }}>to booked meeting.</span>
+          Stop chasing leads —<br />
+          <span style={{ color: '#00d4aa' }}>start closing deals.</span>
         </h1>
 
         <p className="text-xl mb-3 max-w-2xl mx-auto" style={{ color: '#a0a0b0', lineHeight: '1.7' }}>
-          Two AI agents — Nova and Alexander — find your ideal customers, write personalised outreach, and book meetings for you.
+          Pipeloop is the artificial intelligence sales engine for business-to-business software founders. We automate your entire outbound pipeline: lead enrichment, personalised LinkedIn outreach, email sequences, and engagement scoring. You only show up when a lead is warm.
         </p>
-        <p className="text-lg mb-10 font-semibold">
-          You spend <span style={{ color: '#00d4aa' }}>15 minutes a day</span> on it.
+        <p className="text-lg mb-10 font-semibold" style={{ color: '#a0a0b0' }}>
+          Built for European software founders who are done being their own sales rep.
         </p>
 
         {sent ? (
