@@ -172,7 +172,7 @@ export default function LoginPage() {
 
               <div className="mt-6 pt-6" style={{ borderTop: '1px solid #222233' }}>
                 <a
-                  href="https://calendly.com/pipeloop"
+                  href="https://calendly.com/sam-balkenende/30min"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-center text-sm transition-colors"
