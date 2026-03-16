@@ -1,10 +1,10 @@
 // Sam's direct access bypass — no login wall
 // Hit: /api/auth/bypass?token=YOUR_WEBHOOK_SECRET
-// → Auto-signs you in and redirects to dashboard
+// → Auto-signs in ADMIN_EMAIL → dashboard
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { adminClient } from '@/lib/supabase/admin'
+import { getAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token')
@@ -16,23 +16,41 @@ export async function GET(request: NextRequest) {
 
   const adminEmail = process.env.ADMIN_EMAIL
   if (!adminEmail) {
-    return NextResponse.json({ error: 'ADMIN_EMAIL not set in env vars' }, { status: 500 })
+    return NextResponse.json({ error: 'ADMIN_EMAIL not configured' }, { status: 500 })
   }
 
-  // Generate a magic link for the admin email
-  const { data, error } = await adminClient.auth.admin.generateLink({
+  const admin = getAdminClient()
+
+  // Step 1: Ensure the user exists in Supabase auth
+  const { data: userList } = await admin.auth.admin.listUsers()
+  const existingUser = userList?.users?.find(u => u.email === adminEmail)
+
+  if (!existingUser) {
+    const { error: createError } = await admin.auth.admin.createUser({
+      email: adminEmail,
+      email_confirm: true,
+    })
+    if (createError) {
+      return NextResponse.json({ error: 'Could not create user', detail: createError.message }, { status: 500 })
+    }
+  }
+
+  // Step 2: Generate a magic link
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pipeloop.ai'
+  const { data, error } = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email: adminEmail,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`,
+      redirectTo: `${appUrl}/auth/callback?next=/dashboard`,
     },
   })
 
   if (error || !data?.properties?.action_link) {
-    console.error('Bypass auth error:', error)
-    return NextResponse.json({ error: 'Failed to generate login link' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Failed to generate link',
+      detail: error?.message ?? 'no action_link returned',
+    }, { status: 500 })
   }
 
-  // Redirect directly — Sam lands on dashboard, already logged in
   return NextResponse.redirect(data.properties.action_link)
 }
