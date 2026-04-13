@@ -1,0 +1,1308 @@
+<!--
+  ============================================================
+  SETUP — READ THIS BEFORE DEPLOYING
+  ============================================================
+  1. Go to https://web3forms.com and enter your email address.
+     You will receive an access key immediately by email.
+  2. Find the line below that says: const WEB3FORMS_KEY = "ad926cb5-43f3-4c48-88dc-86e8316a9f4f";
+     Replace ad926cb5-43f3-4c48-88dc-86e8316a9f4f with the key from step 1.
+  3. Copy this entire file and paste it into a WordPress
+     Custom HTML block on your /readiness page.
+  4. Done. Every form submission will arrive in your inbox.
+  ============================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Readiness Assessment — Pipeloop</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05100a;
+  --bg-2:#0a1a12;
+  --bg-3:#0f2419;
+  --border:#1a3826;
+  --border-bright:#2a5c3e;
+  --text:#e8f5ec;
+  --text-dim:#9bbfa8;
+  --text-muted:#5a7a66;
+  --neon:#39ff7a;
+  --neon-glow:rgba(57,255,122,0.35);
+  --green-light:#6fffa3;
+  --green-dark:#0d4525;
+  --green-mid:#1a6b3c;
+  --red:#ff5555;
+  --amber:#ffb84d;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  font-weight:400;
+  min-height:100vh;
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(57,255,122,0.06) 0%,transparent 60%),radial-gradient(ellipse at 50% 100%,rgba(13,69,37,0.15) 0%,transparent 60%);
+}
+.container{
+  max-width:880px;
+  margin:0 auto;
+  padding:24px 16px;
+}
+@media(min-width:640px){.container{padding:32px 24px}}
+
+/* Screens */
+.screen{display:none;animation:fadeIn 0.4s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Typography */
+h1{
+  font-size:clamp(1.75rem,4vw,2.75rem);
+  font-weight:800;
+  letter-spacing:-0.02em;
+  line-height:1.15;
+  margin-bottom:16px;
+}
+h2{
+  font-size:clamp(1.35rem,3vw,2rem);
+  font-weight:800;
+  letter-spacing:-0.02em;
+  line-height:1.2;
+  margin-bottom:12px;
+}
+h3{
+  font-size:clamp(1.1rem,2.5vw,1.5rem);
+  font-weight:700;
+  letter-spacing:-0.01em;
+  margin-bottom:8px;
+}
+.gradient-text{
+  background:linear-gradient(135deg,var(--neon),var(--green-light));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* Badge pill */
+.badge{
+  display:inline-block;
+  padding:6px 16px;
+  border-radius:999px;
+  font-size:0.75rem;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  border:1px solid var(--neon);
+  color:var(--neon);
+  margin-bottom:20px;
+}
+
+/* Buttons */
+.btn-primary{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:16px 32px;
+  border:none;
+  border-radius:12px;
+  font-size:1.05rem;
+  font-weight:700;
+  cursor:pointer;
+  background:linear-gradient(135deg,var(--neon),var(--green-light));
+  color:var(--bg);
+  box-shadow:0 0 20px var(--neon-glow);
+  transition:transform 0.2s,box-shadow 0.2s;
+  min-height:44px;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 30px var(--neon-glow),0 0 60px rgba(57,255,122,0.15)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-secondary{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:12px 24px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  font-size:0.95rem;
+  font-weight:600;
+  cursor:pointer;
+  background:transparent;
+  color:var(--text-dim);
+  transition:border-color 0.2s,color 0.2s;
+  min-height:44px;
+}
+.btn-secondary:hover{border-color:var(--border-bright);color:var(--text)}
+.btn-secondary:disabled{opacity:0.3;cursor:not-allowed}
+
+/* Cards */
+.card{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:24px;
+  transition:border-color 0.2s;
+}
+.card:hover{border-color:var(--border-bright)}
+
+/* Trust line */
+.trust-line{
+  margin-top:24px;
+  font-size:0.85rem;
+  color:var(--text-muted);
+}
+
+/* Trap cards grid */
+.traps-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;
+  margin-top:16px;
+}
+.trap-card{position:relative;padding-left:48px}
+.trap-card .trap-num{
+  position:absolute;
+  left:16px;
+  top:24px;
+  font-size:1.5rem;
+  font-weight:800;
+  color:var(--neon);
+  opacity:0.4;
+}
+.trap-card h3{font-size:1rem;margin-bottom:4px}
+.trap-card p{font-size:0.9rem;color:var(--text-dim)}
+
+/* Warning card */
+.warning-card{
+  background:rgba(255,184,77,0.06);
+  border:1px solid rgba(255,184,77,0.25);
+  border-radius:16px;
+  padding:20px 24px;
+  margin-top:32px;
+  font-size:0.9rem;
+  color:var(--amber);
+  line-height:1.6;
+}
+
+/* ===== QUIZ SCREEN ===== */
+.progress-wrapper{margin-bottom:32px}
+.progress-bar-bg{
+  width:100%;
+  height:6px;
+  background:var(--bg-3);
+  border-radius:3px;
+  overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--green-mid),var(--neon));
+  box-shadow:0 0 8px var(--neon-glow);
+  transition:width 0.4s ease;
+  border-radius:3px;
+}
+.progress-label{
+  margin-top:8px;
+  font-size:0.8rem;
+  color:var(--text-muted);
+}
+
+.question-label{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:0.7rem;
+  font-weight:700;
+  letter-spacing:0.08em;
+  background:var(--bg-3);
+  color:var(--text-muted);
+  margin-bottom:16px;
+}
+.question-text{
+  font-size:clamp(1.15rem,2.8vw,1.5rem);
+  font-weight:700;
+  line-height:1.3;
+  margin-bottom:16px;
+}
+.question-insight{
+  background:var(--bg-3);
+  border-left:3px solid var(--neon);
+  border-radius:0 12px 12px 0;
+  padding:14px 18px;
+  margin-bottom:24px;
+  font-style:italic;
+  font-size:0.9rem;
+  color:var(--text-dim);
+  line-height:1.5;
+}
+.options-list{display:flex;flex-direction:column;gap:10px}
+.option-btn{
+  display:block;
+  width:100%;
+  text-align:left;
+  padding:16px 18px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--bg-2);
+  color:var(--text);
+  font-size:0.95rem;
+  font-weight:500;
+  cursor:pointer;
+  transition:border-color 0.2s,background 0.2s,transform 0.15s;
+  min-height:44px;
+  line-height:1.4;
+}
+.option-btn:hover{border-color:var(--border-bright);background:var(--bg-3);transform:translateY(-1px)}
+.option-btn.selected{border-color:var(--neon);background:rgba(57,255,122,0.08)}
+.option-btn:focus-visible{outline:2px solid var(--neon);outline-offset:2px}
+
+.optional-textarea{
+  width:100%;
+  margin-top:16px;
+  padding:14px 16px;
+  background:var(--bg-3);
+  border:1px solid var(--border);
+  border-radius:12px;
+  color:var(--text);
+  font-family:inherit;
+  font-size:0.9rem;
+  line-height:1.5;
+  resize:vertical;
+  min-height:80px;
+}
+.optional-textarea::placeholder{color:var(--text-muted)}
+.optional-textarea:focus{outline:none;border-color:var(--neon)}
+.textarea-label{
+  font-size:0.85rem;
+  color:var(--text-dim);
+  font-style:italic;
+  margin-top:16px;
+  margin-bottom:6px;
+}
+.quiz-nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:28px;
+}
+
+/* Social proof injection */
+.social-proof{
+  background:var(--bg-3);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 20px;
+  margin-bottom:28px;
+  font-size:0.9rem;
+  color:var(--text-dim);
+  font-style:italic;
+  line-height:1.5;
+}
+
+/* ===== GATE SCREEN ===== */
+.blurred-score{
+  font-size:clamp(4rem,10vw,7rem);
+  font-weight:800;
+  text-align:center;
+  filter:blur(12px);
+  color:var(--neon);
+  user-select:none;
+  margin:16px 0;
+}
+.benefits-list{
+  list-style:none;
+  margin:20px 0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.benefits-list li{
+  font-size:0.95rem;
+  color:var(--text-dim);
+  padding-left:28px;
+  position:relative;
+}
+.benefits-list li::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:4px;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:var(--neon);
+  opacity:0.7;
+}
+.form-group{margin-bottom:16px}
+.form-group label{
+  display:block;
+  font-size:0.85rem;
+  font-weight:600;
+  color:var(--text-dim);
+  margin-bottom:6px;
+}
+.form-group input{
+  width:100%;
+  padding:14px 16px;
+  background:var(--bg-3);
+  border:1px solid var(--border);
+  border-radius:12px;
+  color:var(--text);
+  font-family:inherit;
+  font-size:0.95rem;
+  min-height:44px;
+}
+.form-group input:focus{outline:none;border-color:var(--neon)}
+.form-group input::placeholder{color:var(--text-muted)}
+.privacy-line{
+  font-size:0.8rem;
+  color:var(--text-muted);
+  margin-top:12px;
+  text-align:center;
+}
+.form-error{
+  color:var(--red);
+  font-size:0.8rem;
+  margin-top:4px;
+  display:none;
+}
+
+/* ===== RESULTS SCREEN ===== */
+.cost-card{
+  background:rgba(255,85,85,0.06);
+  border:1px solid rgba(255,85,85,0.25);
+  border-radius:20px;
+  padding:32px 24px;
+  text-align:center;
+  margin-bottom:32px;
+}
+.cost-card .cost-label{
+  font-size:0.8rem;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--red);
+  opacity:0.8;
+  margin-bottom:12px;
+}
+.cost-card .cost-monthly{
+  font-size:clamp(2.5rem,7vw,4rem);
+  font-weight:800;
+  color:var(--red);
+  text-shadow:0 0 30px rgba(255,85,85,0.4);
+  line-height:1.1;
+}
+.cost-card .cost-annual{
+  font-size:1.2rem;
+  font-weight:700;
+  color:var(--red);
+  opacity:0.7;
+  margin-top:4px;
+}
+.cost-card .cost-explainer{
+  font-size:0.82rem;
+  color:var(--text-muted);
+  margin-top:16px;
+  line-height:1.5;
+}
+
+.score-card{
+  text-align:center;
+  padding:32px 24px;
+  margin-bottom:32px;
+}
+.score-big{
+  font-size:clamp(3rem,8vw,5rem);
+  font-weight:800;
+  line-height:1;
+}
+.score-tier{
+  display:inline-block;
+  margin-top:12px;
+  padding:6px 16px;
+  border-radius:999px;
+  font-size:0.8rem;
+  font-weight:700;
+  letter-spacing:0.06em;
+  border:1px solid var(--neon);
+  color:var(--neon);
+}
+.score-diagnosis{
+  font-size:0.95rem;
+  color:var(--text-dim);
+  margin-top:12px;
+  line-height:1.5;
+}
+
+.trap-breakdown{margin-bottom:32px}
+.trap-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.trap-row .trap-name{
+  min-width:140px;
+  font-size:0.9rem;
+  font-weight:600;
+}
+.trap-row .trap-bar-bg{
+  flex:1;
+  min-width:120px;
+  height:10px;
+  background:var(--bg-3);
+  border-radius:5px;
+  overflow:hidden;
+}
+.trap-row .trap-bar-fill{
+  height:100%;
+  border-radius:5px;
+  transition:width 1s ease;
+}
+.trap-row .trap-score-label{
+  font-size:0.85rem;
+  font-weight:700;
+  min-width:40px;
+  text-align:right;
+}
+.bar-red{background:linear-gradient(90deg,#ff5555,#ff7777)}
+.bar-amber{background:linear-gradient(90deg,#ffb84d,#ffd080)}
+.bar-green{background:linear-gradient(90deg,var(--green-mid),var(--neon))}
+
+.priority-card{
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:24px;
+  margin-bottom:16px;
+}
+.priority-card .pri-num{
+  font-size:0.75rem;
+  font-weight:700;
+  letter-spacing:0.06em;
+  color:var(--neon);
+  margin-bottom:8px;
+}
+.priority-card h3{margin-bottom:8px;font-size:1.05rem}
+.priority-card .pain-quote{
+  background:var(--bg-3);
+  border-left:3px solid var(--red);
+  border-radius:0 8px 8px 0;
+  padding:12px 14px;
+  font-size:0.85rem;
+  font-style:italic;
+  color:var(--text-dim);
+  margin:12px 0;
+  line-height:1.5;
+}
+.priority-card .headline-action{
+  font-size:1rem;
+  font-weight:700;
+  color:var(--neon);
+  margin:12px 0 8px;
+}
+.priority-card ul{
+  margin:0 0 12px 20px;
+  font-size:0.9rem;
+  color:var(--text-dim);
+  line-height:1.6;
+}
+.priority-card .time-fix{
+  font-size:0.85rem;
+  color:var(--text-muted);
+  margin-bottom:4px;
+}
+.priority-card .feature-link{
+  font-size:0.9rem;
+  font-weight:600;
+  color:var(--neon);
+  cursor:pointer;
+  text-decoration:none;
+}
+
+.ai-card{
+  text-align:center;
+  padding:28px 24px;
+  margin-bottom:32px;
+}
+
+.cta-section{
+  text-align:center;
+  padding:32px 24px;
+  margin-bottom:32px;
+}
+.cta-section h2{margin-bottom:8px}
+.cta-section p{color:var(--text-dim);margin-bottom:20px;font-size:0.95rem}
+
+.share-section{
+  text-align:center;
+  padding:16px;
+  margin-bottom:32px;
+}
+.share-section p{
+  font-size:0.85rem;
+  color:var(--text-muted);
+  margin-bottom:12px;
+}
+.share-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.share-btn{
+  padding:10px 20px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg-2);
+  color:var(--text-dim);
+  font-size:0.85rem;
+  font-weight:600;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:44px;
+  transition:border-color 0.2s;
+}
+.share-btn:hover{border-color:var(--border-bright);color:var(--text)}
+
+/* Toast */
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--bg-2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:14px 24px;
+  font-size:0.85rem;
+  color:var(--text-dim);
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  z-index:1000;
+  opacity:0;
+  transition:opacity 0.3s;
+  max-width:90vw;
+  text-align:center;
+}
+.toast.show{opacity:1}
+
+/* Confirmation overlay */
+.confirmation{
+  text-align:center;
+  padding:48px 24px;
+}
+.confirmation h2{color:var(--neon);margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- ==================== HERO SCREEN ==================== -->
+<section id="screen-hero" class="screen active">
+<div class="container">
+  <div style="text-align:center;padding-top:32px">
+    <span class="badge">PIPELINE READINESS ASSESSMENT</span>
+    <h1>Your competitors are running AI agents 24/7.<br><span class="gradient-text">You're still copy-pasting LinkedIn messages.</span></h1>
+    <p style="font-size:clamp(1rem,2.2vw,1.15rem);color:var(--text-dim);max-width:640px;margin:0 auto 28px;line-height:1.6">
+      Score your outbound gap in 4 minutes. Get the monetary cost of your current setup — and the 3 fixes that move the needle most.
+    </p>
+    <button class="btn-primary" onclick="startAssessment()" style="font-size:1.1rem;padding:18px 40px">Start Free Assessment &rarr;</button>
+    <p class="trust-line">Built by Pipeloop. Used by 200+ B2B SaaS founders across Europe.</p>
+  </div>
+
+  <div style="margin-top:56px">
+    <h2 style="text-align:center">The 5 Outbound Traps</h2>
+    <p style="text-align:center;color:var(--text-dim);margin-bottom:24px">Founders fall into one of these. Most fall into all five.</p>
+    <div class="traps-grid">
+      <div class="card trap-card"><span class="trap-num">1</span><h3>Manual Grind</h3><p>The founder is the prospecting engine. It does not scale.</p></div>
+      <div class="card trap-card"><span class="trap-num">2</span><h3>Spray and Pray</h3><p>Generic messages, predictable replies, low conversion.</p></div>
+      <div class="card trap-card"><span class="trap-num">3</span><h3>Stale Data</h3><p>Lists rot. Bounces stack. Sender reputation tanks.</p></div>
+      <div class="card trap-card"><span class="trap-num">4</span><h3>Follow-up Black Hole</h3><p>80% of deals die between touch one and touch five.</p></div>
+      <div class="card trap-card"><span class="trap-num">5</span><h3>No Signal Reading</h3><p>You cannot tell who is warm. So you treat everyone the same.</p></div>
+    </div>
+  </div>
+
+  <div class="warning-card">
+    This assessment is for B2B Software-as-a-Service founders with &euro;5K&ndash;&euro;100K Monthly Recurring Revenue. If you run a Business-to-Consumer brand, an e-commerce store, or an agency, stop here. The report will not apply to you and we do not want to waste your time.
+  </div>
+</div>
+</section>
+
+<!-- ==================== QUIZ SCREEN ==================== -->
+<section id="screen-quiz" class="screen">
+<div class="container">
+  <div class="progress-wrapper">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="16" style="width:0%"></div>
+    </div>
+    <div class="progress-label" id="progressLabel">Question 1 of 16 &middot; ~4 min remaining</div>
+  </div>
+  <div id="socialProofSlot"></div>
+  <div id="questionCard" aria-live="polite"></div>
+  <div class="quiz-nav">
+    <button class="btn-secondary" id="backBtn" onclick="goBack()" disabled>&larr; Back</button>
+    <button class="btn-primary" id="continueBtn" onclick="continueFromTextQ()" style="display:none">Continue &rarr;</button>
+  </div>
+</div>
+</section>
+
+<!-- ==================== GATE SCREEN ==================== -->
+<section id="screen-gate" class="screen">
+<div class="container" style="max-width:520px">
+  <div style="text-align:center">
+    <span class="badge">YOUR REPORT IS READY</span>
+    <div class="blurred-score" id="blurredScore">72</div>
+    <h2>Unlock your Pipeline Readiness Report</h2>
+  </div>
+  <ul class="benefits-list">
+    <li>Your overall Pipeline Readiness Score (0&ndash;100)</li>
+    <li>The monetary cost of your current outbound setup</li>
+    <li>Your benchmark vs. 200+ comparable founders</li>
+    <li>Your top 3 priorities — what to fix and in what order</li>
+  </ul>
+  <form id="gateForm" onsubmit="submitGate(event)" novalidate>
+    <div class="form-group">
+      <label for="gateEmail">Work Email</label>
+      <input type="email" id="gateEmail" placeholder="sam@company.com" required>
+      <div class="form-error" id="errEmail">Please enter a valid work email.</div>
+    </div>
+    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:8px" id="gateSubmitBtn">Unlock My Report &rarr;</button>
+  </form>
+  <p class="privacy-line">We send you the report. Nothing else without your okay.</p>
+</div>
+</section>
+
+<!-- ==================== RESULTS SCREEN ==================== -->
+<section id="screen-results" class="screen">
+<div class="container" id="resultsContainer"></div>
+</section>
+
+<!-- ==================== CONFIRMATION (after CTA click) ==================== -->
+<section id="screen-confirm" class="screen">
+<div class="container confirmation">
+  <h2>Got it.</h2>
+  <p style="color:var(--text-dim);font-size:1.05rem;max-width:480px;margin:0 auto">Sam will reach out within 24 hours. Check your inbox for your full report.</p>
+</div>
+</section>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const WEB3FORMS_KEY = "ad926cb5-43f3-4c48-88dc-86e8316a9f4f";
+
+// ============================================================
+// QUESTIONS DATA
+// ============================================================
+const questions = [
+  {
+    id:'q1', label:'QUESTION 01', text:'What is your current stage?', insight:null,
+    options:['Pre-revenue / building Minimum Viable Product','Early traction (\u20AC0\u2013\u20AC10K Monthly Recurring Revenue)','Scaling (\u20AC10K\u2013\u20AC50K Monthly Recurring Revenue)','Growth (\u20AC50K+ Monthly Recurring Revenue)'],
+    keys:['pre-revenue','early','scaling','growth']
+  },
+  {
+    id:'q2', label:'QUESTION 02', text:'What is your average Annual Contract Value per customer?', insight:null,
+    options:['Less than \u20AC1,000','\u20AC1,000 \u2013 \u20AC3,000','\u20AC3,000 \u2013 \u20AC5,000','\u20AC5,000 \u2013 \u20AC8,000','\u20AC8,000 \u2013 \u20AC20,000','\u20AC20,000 \u2013 \u20AC50,000','\u20AC50,000+'],
+    keys:['lt1k','1to3k','3to5k','5to8k','8to20k','20to50k','gt50k']
+  },
+  {
+    id:'q3', label:'QUESTION 03', text:'How far have you gone in adopting Artificial Intelligence in your sales process? Scale 1\u20135.', insight:'The founders winning in 2026 treat Artificial Intelligence as the operator, not the assistant. Where do you sit?',
+    options:['1 \u2014 Not at all. Everything is manual.','2 \u2014 We experiment a bit with ChatGPT for individual messages.','3 \u2014 We use Artificial Intelligence tools, but fragmented and without strategy.','4 \u2014 Artificial Intelligence is integrated into our workflow across multiple steps.','5 \u2014 Fully autonomous. Artificial Intelligence agents run outbound end-to-end.'],
+    keys:[1,2,3,4,5]
+  },
+  {
+    id:'q4', label:'QUESTION 04', text:'How many paying customers do you have right now?', insight:'Stage matters. Sub-25 customers means you should be talking to every single one. 100+ means you should already be pattern-matching.',
+    options:['0\u201310','10\u201330','30\u201380','80\u2013200','200+'],
+    keys:['0-10','10-30','30-80','80-200','200+']
+  },
+  {
+    id:'q5', label:'QUESTION 05', text:'How many real conversations have you had with your Ideal Customer Profile in the past 90 days?', insight:'The number-one predictor of product-market fit is conversation volume with your Ideal Customer Profile. Sub-10 means you are guessing.',
+    options:['Fewer than 5','5\u201315','15\u201340','40+'],
+    keys:['lt5','5to15','15to40','40+']
+  },
+  {
+    id:'q6', label:'QUESTION 06', text:'Can you describe who you help without using demographics?', insight:'\u201CMarketing managers at companies with 50\u2013200 employees\u201D is a demographic. \u201CPeople who get blamed when the pipeline is empty\u201D is an Ideal Customer Profile. The second one converts.',
+    options:['No, I describe them by industry and company size only','Sort of \u2014 I have a job title and a company stage','Yes \u2014 I can describe their role, their stress, and their week','Yes \u2014 and I can name the moment they search for a solution'],
+    keys:['no','sort-of','yes-role','yes-moment'],
+    hasTextarea:true, textareaLabel:'In one sentence, who do you actually help? (Skip if you would rather not.)'
+  },
+  {
+    id:'q7', label:'QUESTION 07', text:'Can you describe your customer\u2019s daily reality \u2014 what their Monday morning looks like?', insight:'Empathy depth predicts message resonance. Founders who can describe a Monday morning write outbound that gets answered.',
+    options:['I sell to a job title, not a person','I know their role but not their week','I could write their Monday morning frustration in one paragraph','I have sat in their chair and watched them work'],
+    keys:['no','vague','yes-scenes','yes-words']
+  },
+  {
+    id:'q8', label:'QUESTION 08', text:'Can you name your customer\u2019s biggest pain in their own words?', insight:'Reply rates double when your message uses the exact phrase your customer would use to a peer over coffee.',
+    options:['I describe the pain in my own words, not theirs','I paraphrase \u2014 close enough, but never verbatim','I can quote a real customer from memory right now','I have a file of exact phrases customers use and I write copy from it'],
+    keys:['no','my-version','yes-quotes','yes-swipe'],
+    hasTextarea:true, textareaLabel:'Paste one quote you have actually heard from a customer. (Skip is fine.)'
+  },
+  {
+    id:'q9', label:'QUESTION 09', text:'What event triggers your customer to start looking for a solution?', insight:'Outbound timed to the trigger event converts 5\u201310 times higher than outbound timed to a calendar.',
+    options:['I reach out when I have time, not when something happens on their end','I think I know what makes them look, but I have never validated it','I can name the exact moment they start Googling \u2014 and I have seen it happen','I track trigger events in real time and my outreach fires within 48 hours of one'],
+    keys:['no-idea','guess','confirmed','list']
+  },
+  {
+    id:'q10', label:'QUESTION 10', text:'How many verticals are you actively selling into right now?', insight:'Niche specificity beats market size. The founders who win pick one vertical, dominate it, then expand.',
+    options:['1','2\u20133','4\u20136','7+ (we sell to anyone who will buy)'],
+    keys:['1','2-3','4-6','7+'],
+    hasTextarea:true, textareaLabel:'If you had to pick ONE vertical to bet on, which would it be? (Skip if undecided.)'
+  },
+  {
+    id:'q11', label:'QUESTION 11', text:'What percentage of your current customers are an ideal fit?', insight:'If less than half of your customers are an ideal fit, you are not running a sales process. You are running rescue missions.',
+    options:['Less than 25%','25\u201350%','50\u201375%','75%+'],
+    keys:['lt25','25to50','50to75','75+']
+  },
+  {
+    id:'q12', label:'QUESTION 12', text:'Do you know what your top 20% of customers share that the bottom 80% do not?', insight:'The top 20% is your real Ideal Customer Profile. Most founders cannot name three things they share. Can you?',
+    options:['No difference \u2014 a deal is a deal','I have a gut feeling but nothing on paper','I could name one or two traits they share','I have it written down: three or more shared traits, validated against churn data'],
+    keys:['no-idea','vague','theory','documented']
+  },
+  {
+    id:'q13', label:'QUESTION 13', text:'What is your average sales cycle from first touch to closed deal?', insight:'Sales cycles longer than your average customer\u2019s tenure are a red flag \u2014 you are losing money before the customer is profitable.',
+    options:['Less than 2 weeks','2\u20136 weeks','6 weeks \u2013 3 months','3+ months'],
+    keys:['lt2w','2to6w','6wto3m','3m+']
+  },
+  {
+    id:'q14', label:'QUESTION 14', text:'Of the prospects who take a demo or a call, what percentage end up buying?', insight:'Top quartile B2B Software-as-a-Service: 30%+. Bottom quartile: less than 15%. Where do you sit?',
+    options:['Less than 10%','10\u201325%','25\u201340%','40%+','I do not track it'],
+    keys:['lt10','10to25','25to40','40+','unmeasured']
+  },
+  {
+    id:'q15', label:'QUESTION 15', text:'Do you use your customer\u2019s actual language in your outbound and marketing?', insight:'Founders who use customer language in messaging see 2\u20133x reply rate improvements. It is the single highest-leverage copy change.',
+    options:['No \u2014 we use our own marketing language','Sometimes','Yes \u2014 we have a swipe file we pull from','Yes \u2014 we test customer-language variants weekly'],
+    keys:['no','sometimes','swipe','weekly']
+  },
+  {
+    id:'q16', label:'QUESTION 16', text:'Why do customers choose you over competitors?', insight:'If you cannot answer this in one sentence using your customer\u2019s language, you do not have positioning. You have hope.',
+    options:['Honestly? I think they buy because we showed up first','I tell them our features \u2014 that is enough','Customers have told me why, and it is not what I expected','I can say it in one sentence, in their words, and it is on our homepage'],
+    keys:['no-idea','guess','reasons','validated']
+  }
+];
+
+// Answer value mapping: option index -> score 0-10
+function answerValue(qIndex, optIndex) {
+  const q = questions[qIndex];
+  if (q.options.length === 5) {
+    return [0, 2, 5, 8, 10][optIndex] || 0;
+  }
+  return [0, 3, 6, 10][optIndex] || 0;
+}
+
+// Question weights and trap assignments
+const qMeta = {
+  q1:{weight:0,trap:null},q2:{weight:0,trap:null},
+  q3:{weight:2,trap:'manualGrind'},q4:{weight:1,trap:'signalReading'},
+  q5:{weight:2,trap:'spray'},q6:{weight:2,trap:'spray'},
+  q7:{weight:2,trap:'spray'},q8:{weight:2,trap:'spray'},
+  q9:{weight:2,trap:'signalReading'},q10:{weight:1,trap:'staleData'},
+  q11:{weight:2,trap:'staleData'},q12:{weight:2,trap:'staleData'},
+  q13:{weight:1,trap:'followUp'},q14:{weight:2,trap:'followUp'},
+  q15:{weight:2,trap:'spray'},q16:{weight:2,trap:'signalReading'}
+};
+
+const trapWeights = {
+  manualGrind:0.20, spray:0.25, staleData:0.15, followUp:0.25, signalReading:0.15
+};
+
+const trapNames = {
+  manualGrind:'Scaling Without You', spray:'Customer Understanding', staleData:'Target Focus',
+  followUp:'Deal Conversion', signalReading:'Buyer Timing'
+};
+
+// Social proof after questions (shown BEFORE the next question)
+const socialProofs = {
+  4: '\uD83D\uDCAC \u201CBefore Pipeloop, prospecting was my entire Saturday.\u201D \u2014 Marlies, founder',
+  9: '\uD83D\uDCCA 73% of founders at your stage are stuck in the same trap.',
+  13: '\uD83C\uDFAF Top performers spend less than 2 hours per week on manual outreach.'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  currentScreen:'hero',
+  currentQuestion:0,
+  answers:{},
+  answerIndices:{},
+  optionalTexts:{},
+  lead:{firstName:'',email:'',company:'',website:''},
+  scores:null,
+  tier:null,
+  monetaryCost:null
+};
+
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  state.currentScreen = name;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startAssessment() {
+  showScreen('quiz');
+  renderQuestion();
+}
+
+// ============================================================
+// QUIZ LOGIC
+// ============================================================
+function renderQuestion() {
+  const qi = state.currentQuestion;
+  const q = questions[qi];
+
+  // Progress
+  const pct = ((qi) / 16 * 100).toFixed(0);
+  const bar = document.getElementById('progressBar');
+  bar.style.width = pct + '%';
+  bar.setAttribute('aria-valuenow', qi);
+  const minLeft = Math.max(1, Math.round((16 - qi) * 0.25));
+  document.getElementById('progressLabel').textContent = 'Question ' + (qi + 1) + ' of 16 \u00B7 ~' + minLeft + ' min remaining';
+
+  // Social proof
+  const spSlot = document.getElementById('socialProofSlot');
+  if (socialProofs[qi]) {
+    spSlot.innerHTML = '<div class="social-proof">' + socialProofs[qi] + '</div>';
+  } else {
+    spSlot.innerHTML = '';
+  }
+
+  // Build question card
+  let html = '<div class="question-label">' + q.label + '</div>';
+  html += '<div class="question-text">' + q.text + '</div>';
+  if (q.insight) {
+    html += '<div class="question-insight">' + q.insight + '</div>';
+  }
+  html += '<div class="options-list">';
+  q.options.forEach((opt, i) => {
+    const sel = state.answerIndices[q.id] === i ? ' selected' : '';
+    html += '<button type="button" class="option-btn' + sel + '" onclick="selectOption(' + qi + ',' + i + ')" tabindex="0">' + opt + '</button>';
+  });
+  html += '</div>';
+  if (q.hasTextarea) {
+    html += '<div class="textarea-label">' + q.textareaLabel + '</div>';
+    html += '<textarea class="optional-textarea" id="optText_' + q.id + '" placeholder="Type here or skip...">' + (state.optionalTexts[q.id] || '') + '</textarea>';
+  }
+  document.getElementById('questionCard').innerHTML = html;
+
+  // Nav
+  document.getElementById('backBtn').disabled = (qi === 0);
+  document.getElementById('continueBtn').style.display = q.hasTextarea ? 'inline-flex' : 'none';
+}
+
+function selectOption(qi, optIndex) {
+  const q = questions[qi];
+  state.answers[q.id] = q.keys[optIndex];
+  state.answerIndices[q.id] = optIndex;
+
+  // Save optional text if present
+  if (q.hasTextarea) {
+    const ta = document.getElementById('optText_' + q.id);
+    if (ta) state.optionalTexts[q.id] = ta.value;
+  }
+
+  // Highlight selection
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((b, i) => b.classList.toggle('selected', i === optIndex));
+
+  // Auto-advance for non-textarea questions
+  if (!q.hasTextarea) {
+    setTimeout(() => advance(), 250);
+  }
+}
+
+function continueFromTextQ() {
+  const q = questions[state.currentQuestion];
+  if (q.hasTextarea) {
+    const ta = document.getElementById('optText_' + q.id);
+    if (ta) state.optionalTexts[q.id] = ta.value;
+  }
+  if (state.answerIndices[q.id] === undefined) return; // must select an option
+  advance();
+}
+
+function advance() {
+  if (state.currentQuestion < 15) {
+    state.currentQuestion++;
+    renderQuestion();
+  } else {
+    // Calculate preliminary score for blurred teaser
+    calculateScores();
+    document.getElementById('blurredScore').textContent = state.scores.overall;
+    showScreen('gate');
+  }
+}
+
+function goBack() {
+  if (state.currentQuestion > 0) {
+    state.currentQuestion--;
+    renderQuestion();
+  }
+}
+
+// ============================================================
+// SCORING
+// ============================================================
+function calculateScores() {
+  // Compute trap scores
+  const trapTotals = {};
+  const trapWeightSums = {};
+  for (const trap of Object.keys(trapNames)) {
+    trapTotals[trap] = 0;
+    trapWeightSums[trap] = 0;
+  }
+
+  questions.forEach((q, qi) => {
+    const meta = qMeta[q.id];
+    if (!meta.trap) return;
+    const idx = state.answerIndices[q.id];
+    if (idx === undefined) return;
+    const val = answerValue(qi, idx);
+    trapTotals[meta.trap] += val * meta.weight;
+    trapWeightSums[meta.trap] += 10 * meta.weight;
+  });
+
+  const trapScores = {};
+  for (const trap of Object.keys(trapNames)) {
+    trapScores[trap] = trapWeightSums[trap] > 0 ? Math.round(trapTotals[trap] / trapWeightSums[trap] * 100) : 0;
+  }
+
+  // Overall score
+  let overall = 0;
+  for (const trap of Object.keys(trapWeights)) {
+    overall += trapScores[trap] * trapWeights[trap];
+  }
+  overall = Math.round(overall);
+
+  // Tier
+  let tier, diagnosis;
+  if (overall <= 25) { tier = 'SURVIVAL MODE'; diagnosis = 'You are surviving, not selling. Every week you wait costs you a quarter of revenue.'; }
+  else if (overall <= 50) { tier = 'HUSTLER'; diagnosis = 'You have the basics, but every trap is costing you deals you do not even see.'; }
+  else if (overall <= 75) { tier = 'OPERATOR'; diagnosis = 'You have grip. You are missing leverage \u2014 and that is the expensive part.'; }
+  else { tier = 'ARCHITECT'; diagnosis = 'Your system works for you. Now we make it autonomous.'; }
+
+  // AI adoption level
+  const aiLevel = state.answers.q3 || 1;
+
+  state.scores = { overall, trapScores, tier, diagnosis, aiLevel };
+
+  // Monetary cost
+  calculateMonetaryCost();
+
+  // Lead tier
+  determineLeadTier();
+}
+
+function calculateMonetaryCost() {
+  const founderHourly = 150;
+  const stageHours = {'pre-revenue':12,'early':10,'scaling':8,'growth':6};
+  const hoursPerWeek = stageHours[state.answers.q1] || 10;
+  const founderCostPerMonth = hoursPerWeek * 4 * founderHourly;
+
+  const acvMidpoints = {'lt1k':500,'1to3k':2000,'3to5k':4000,'5to8k':6500,'8to20k':14000,'20to50k':35000,'gt50k':75000};
+  const acv = acvMidpoints[state.answers.q2] || 12500;
+  const monthlyVolume = 200;
+  const replyGap = 0.04;
+  const winRate = 0.15;
+  const lostDealsPerMonth = monthlyVolume * replyGap * winRate;
+  const lostDealsCost = lostDealsPerMonth * acv * 0.5;
+
+  const monthly = Math.round(founderCostPerMonth + lostDealsCost);
+  const annual = monthly * 12;
+  state.monetaryCost = { monthly, annual };
+}
+
+function determineLeadTier() {
+  const stage = state.answers.q1;
+  const acv = state.answers.q2;
+  const score = state.scores.overall;
+  const aiLevel = state.scores.aiLevel;
+
+  if (score > 75 && aiLevel === 5) { state.tier = 'peer'; return; }
+  if ((stage === 'scaling' || stage === 'growth') && (acv === '20to50k' || acv === 'gt50k') && score >= 30 && score <= 70) { state.tier = 'hot'; return; }
+  if (stage === 'pre-revenue') { state.tier = 'cool'; return; }
+  if (stage === 'early' && score < 50) { state.tier = 'warm'; return; }
+  state.tier = 'warm';
+}
+
+// ============================================================
+// GATE FORM
+// ============================================================
+async function submitGate(e) {
+  e.preventDefault();
+  const em = document.getElementById('gateEmail').value.trim();
+
+  // Validation
+  let valid = true;
+  document.getElementById('errEmail').style.display = (em && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) ? 'none' : 'block'; if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) valid = false;
+  if (!valid) return;
+
+  state.lead = { email: em };
+
+  const btn = document.getElementById('gateSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Preparing your report...';
+
+  // Build answer labels
+  const answerLabels = {};
+  questions.forEach((q, qi) => {
+    const idx = state.answerIndices[q.id];
+    answerLabels[q.id] = idx !== undefined ? q.options[idx] : '';
+  });
+
+  // Web3Forms submission 1
+  const payload = {
+    access_key: WEB3FORMS_KEY,
+    subject: '[Pipeloop Assessment] New Lead: ' + em + ' \u2014 Score ' + state.scores.overall + '/100',
+    from_name: 'Pipeloop Readiness Assessment',
+    email: em,
+    overall_score: state.scores.overall, tier: state.scores.tier,
+    ai_adoption_level: state.scores.aiLevel,
+    monetary_cost_monthly: '\u20AC' + formatEuro(state.monetaryCost.monthly),
+    monetary_cost_annual: '\u20AC' + formatEuro(state.monetaryCost.annual),
+    trap_manual_grind: state.scores.trapScores.manualGrind + '%',
+    trap_spray_pray: state.scores.trapScores.spray + '%',
+    trap_stale_data: state.scores.trapScores.staleData + '%',
+    trap_follow_up: state.scores.trapScores.followUp + '%',
+    trap_signal_reading: state.scores.trapScores.signalReading + '%',
+    q1_stage: answerLabels.q1, q2_acv: answerLabels.q2, q3_ai_adoption: answerLabels.q3,
+    q4_customers: answerLabels.q4, q5_icp_conversations: answerLabels.q5,
+    q6_customer_description: answerLabels.q6, q6_optional_text: state.optionalTexts.q6 || '',
+    q7_daily_reality: answerLabels.q7,
+    q8_customer_pain: answerLabels.q8, q8_optional_text: state.optionalTexts.q8 || '',
+    q9_trigger_event: answerLabels.q9,
+    q10_verticals: answerLabels.q10, q10_optional_text: state.optionalTexts.q10 || '',
+    q11_ideal_fit_percent: answerLabels.q11, q12_top_20_pattern: answerLabels.q12,
+    q13_sales_cycle: answerLabels.q13, q14_win_rate: answerLabels.q14,
+    q15_customer_language: answerLabels.q15, q16_why_win: answerLabels.q16,
+    submitted_at: new Date().toISOString(),
+    user_agent: navigator.userAgent
+  };
+
+  try {
+    await fetch('https://api.web3forms.com/submit', {
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify(payload)
+    });
+  } catch(err) {
+    console.error('Web3Forms submission 1 failed:', err);
+    showToast('We had trouble saving your details, but here is your report. Please email sam@pipeloop.ai if you would like a copy.');
+  }
+
+  renderResults();
+  showScreen('results');
+}
+
+// ============================================================
+// FORMAT HELPERS
+// ============================================================
+function formatEuro(n) {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// ============================================================
+// RESULTS RENDERING
+// ============================================================
+function renderResults() {
+  const s = state.scores;
+  const mc = state.monetaryCost;
+  const ts = s.trapScores;
+
+  // Sort traps by score ascending for priorities
+  const sortedTraps = Object.keys(ts).sort((a, b) => ts[a] - ts[b]);
+  const top3 = sortedTraps.slice(0, 3);
+
+  let html = '';
+
+  // Section A — Monetary Cost
+  html += '<div class="cost-card">';
+  html += '<div class="cost-label">THIS IS WHAT YOUR CURRENT OUTBOUND IS COSTING YOU</div>';
+  html += '<div class="cost-monthly">\u20AC' + formatEuro(mc.monthly) + ' / month</div>';
+  html += '<div class="cost-annual">\u20AC' + formatEuro(mc.annual) + ' / year</div>';
+  html += '<div class="cost-explainer">Calculated from your founder hours \u00D7 \u20AC150 per hour, plus the gap between your reply rate and the AI-personalized benchmark, applied to your estimated deal value.</div>';
+  html += '</div>';
+
+  // Section B — Score Card
+  const scoreColor = s.overall < 50 ? 'var(--red)' : s.overall <= 70 ? 'var(--amber)' : 'var(--neon)';
+  const tierBorderColor = scoreColor;
+  html += '<div class="card score-card">';
+  html += '<div class="score-big" style="color:' + scoreColor + '">' + s.overall + ' / 100</div>';
+  html += '<div><span class="score-tier" style="border-color:' + tierBorderColor + ';color:' + tierBorderColor + '">' + s.tier + '</span></div>';
+  html += '<div class="score-diagnosis">' + s.diagnosis + '</div>';
+  html += '</div>';
+
+  // Section C — Trap Breakdown
+  html += '<div class="trap-breakdown"><h2>Your 5 Outbound Traps</h2><div style="margin-top:20px">';
+  for (const trap of ['manualGrind','spray','staleData','followUp','signalReading']) {
+    const score = ts[trap];
+    const barClass = score < 40 ? 'bar-red' : score <= 70 ? 'bar-amber' : 'bar-green';
+    const color = score < 40 ? 'var(--red)' : score <= 70 ? 'var(--amber)' : 'var(--neon)';
+    html += '<div class="trap-row">';
+    html += '<span class="trap-name">' + trapNames[trap] + '</span>';
+    html += '<div class="trap-bar-bg"><div class="trap-bar-fill ' + barClass + '" style="width:0%" data-target="' + score + '"></div></div>';
+    html += '<span class="trap-score-label" style="color:' + color + '">' + score + '%</span>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  // Section D — Top 3 Priorities
+  html += '<h2>Your Top 3 Priorities</h2>';
+  const priorityData = getPriorityData();
+  top3.forEach((trap, i) => {
+    const pd = priorityData[trap];
+    html += '<div class="priority-card">';
+    html += '<div class="pri-num">PRIORITY ' + (i + 1) + '</div>';
+    html += '<h3>' + trapNames[trap] + ' \u2014 ' + ts[trap] + '%</h3>';
+    html += '<div class="pain-quote">' + pd.pain + '</div>';
+    html += '</div>';
+  });
+
+  // Section E — AI Adoption
+  const aiLevel = typeof s.aiLevel === 'number' ? s.aiLevel : parseInt(s.aiLevel) || 2;
+  html += '<div class="card ai-card">';
+  html += '<h2>Your AI Adoption Level: <span class="gradient-text">' + aiLevel + ' / 5</span></h2>';
+  html += '<p style="color:var(--text-dim);margin-top:8px">68% of founders at your stage sit at level 2. Top performers sit at level 4.</p>';
+  html += '<p style="color:var(--neon);font-weight:700;margin-top:12px">Pipeloop jumps you to level 4 in 14 days.</p>';
+  html += '</div>';
+
+  // Section F — CTA
+  const cta = getCTA();
+  html += '<div class="card cta-section">';
+  html += '<h2>' + cta.headline + '</h2>';
+  html += '<p>' + cta.sub + '</p>';
+  html += '<button class="btn-primary" onclick="ctaClick(\'' + cta.intent + '\')">' + cta.button + '</button>';
+  html += '</div>';
+
+  // Section G — Share
+  const shareText = encodeURIComponent('I just scored ' + s.overall + '/100 on Pipeline Readiness. Turns out my outbound is costing me \u20AC' + formatEuro(mc.annual) + ' per year. How AI-ready is your pipeline?');
+  html += '<div class="share-section">';
+  html += '<p>Share your results</p>';
+  html += '<div class="share-btns">';
+  html += '<a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=https://pipeloop.ai/readiness&summary=' + shareText + '" target="_blank" rel="noopener">Share on LinkedIn</a>';
+  html += '<a class="share-btn" href="https://wa.me/?text=' + shareText + '%20https://pipeloop.ai/readiness" target="_blank" rel="noopener">Share on WhatsApp</a>';
+  html += '</div></div>';
+
+  document.getElementById('resultsContainer').innerHTML = html;
+
+  // Animate bars after render
+  setTimeout(() => {
+    document.querySelectorAll('.trap-bar-fill[data-target]').forEach(bar => {
+      bar.style.width = bar.dataset.target + '%';
+    });
+  }, 100);
+}
+
+function getPriorityData() {
+  const stage = state.answers.q1 || 'early';
+  const stageHoursMap = {'pre-revenue':12,'early':10,'scaling':8,'growth':6};
+  const hrs = stageHoursMap[stage] || 10;
+  const monthlyCost = hrs * 4 * 150;
+
+  return {
+    manualGrind: {
+      pain: 'Every hour you spend prospecting is an hour you are not closing. At \u20AC150 per hour, that is \u20AC' + formatEuro(monthlyCost) + ' per month in founder time that could go to revenue-generating work.'
+    },
+    spray: {
+      pain: 'Messages that do not reflect how your customer thinks get ignored. Every generic outreach is a missed opportunity \u2014 someone who could have replied but never will.'
+    },
+    staleData: {
+      pain: 'Selling to the wrong people is more expensive than not selling at all. Every deal closed with a bad-fit customer costs you in churn, support, and reputation.'
+    },
+    followUp: {
+      pain: 'Most deals are not lost to competitors. They are lost to silence. Every prospect who went quiet after the first touch is revenue that slipped through the cracks.'
+    },
+    signalReading: {
+      pain: 'Without knowing who is ready to buy, you spend equal time on cold and warm prospects. That means half your outbound effort is wasted on people who were never going to respond.'
+    }
+  };
+}
+
+function getCTA() {
+  const tier = state.tier;
+  const ctaMap = {
+    hot: {
+      headline: 'Want Sam to walk you through your report personally?',
+      sub: 'A 30-minute call. No pitch. Just your data, your gaps, and what to fix first.',
+      button: 'Request a Pipeline Audit \u2192',
+      intent: 'audit_request'
+    },
+    warm: {
+      headline: 'Want the full Pipeline Playbook?',
+      sub: 'The step-by-step guide 200+ founders use to rebuild outbound from scratch.',
+      button: 'Get the Playbook \u2192',
+      intent: 'playbook_request'
+    },
+    cool: {
+      headline: 'Join 200+ founders building outbound from scratch',
+      sub: 'Weekly insights, frameworks, and founder stories. No spam.',
+      button: 'Join the Community \u2192',
+      intent: 'community_join'
+    },
+    peer: {
+      headline: 'You are further than most. Let\u2019s talk partnership.',
+      sub: 'Your score and AI adoption level put you in the top tier. That is rare.',
+      button: 'Open a Conversation \u2192',
+      intent: 'partnership_inquiry'
+    }
+  };
+  return ctaMap[tier] || ctaMap.warm;
+}
+
+// ============================================================
+// CTA CLICK (submission 2)
+// ============================================================
+async function ctaClick(intent) {
+  const payload = {
+    access_key: WEB3FORMS_KEY,
+    subject: '[Pipeloop Assessment] ' + state.scores.tier + ' LEAD WANTS FOLLOW-UP: ' + state.lead.email,
+    from_name: 'Pipeloop Readiness Assessment',
+    intent: intent,
+    email: state.lead.email,
+    tier: state.scores.tier,
+    overall_score: state.scores.overall,
+    monetary_cost_monthly: '\u20AC' + formatEuro(state.monetaryCost.monthly),
+    message: 'This lead just clicked the ' + intent + ' button on the results page. Reach out within 24 hours.'
+  };
+
+  try {
+    await fetch('https://api.web3forms.com/submit', {
+      method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify(payload)
+    });
+  } catch(err) {
+    console.error('Web3Forms submission 2 failed:', err);
+  }
+
+  showScreen('confirm');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 6000);
+}
+
+// ============================================================
+// KEYBOARD NAVIGATION
+// ============================================================
+document.addEventListener('keydown', function(e) {
+  if (state.currentScreen !== 'quiz') return;
+  if (e.key === 'Escape') goBack();
+  if (e.key >= '1' && e.key <= '5') {
+    const idx = parseInt(e.key) - 1;
+    const q = questions[state.currentQuestion];
+    if (idx < q.options.length) selectOption(state.currentQuestion, idx);
+  }
+});
+</script>
+</body>
+</html>
