@@ -1191,6 +1191,8 @@ async function submitGate(e) {
     access_key: WEB3FORMS_KEY,
     subject: '[Pipeloop Assessment] New Lead: ' + em + ' \u2014 Score ' + state.scores.overall + '/100',
     from_name: 'Pipeloop Readiness Assessment',
+    botcheck: '',
+    name: em.split('@')[0],
     email: em,
     overall_score: state.scores.overall, tier: state.scores.tier,
     ai_adoption_level: state.scores.aiLevel,
@@ -1211,6 +1213,7 @@ async function submitGate(e) {
     q11_ideal_fit_percent: answerLabels.q11, q12_top_20_pattern: answerLabels.q12,
     q13_sales_cycle: answerLabels.q13, q14_win_rate: answerLabels.q14,
     q15_customer_language: answerLabels.q15, q16_why_win: answerLabels.q16,
+    message: 'New assessment lead: ' + em + ' scored ' + state.scores.overall + '/100 (' + state.scores.tier + ')',
     submitted_at: new Date().toISOString(),
     user_agent: navigator.userAgent
   };
