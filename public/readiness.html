@@ -18,6 +18,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pipeline Readiness Assessment — Pipeloop</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..800;1,9..40,300..800&display=swap');
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#05100a;
@@ -1191,8 +1193,8 @@ async function submitGate(e) {
     access_key: WEB3FORMS_KEY,
     subject: '[Pipeloop Assessment] New Lead: ' + em + ' \u2014 Score ' + state.scores.overall + '/100',
     from_name: 'Pipeloop Readiness Assessment',
-    botcheck: '',
     name: em.split('@')[0],
+    replyto: em,
     email: em,
     overall_score: state.scores.overall, tier: state.scores.tier,
     ai_adoption_level: state.scores.aiLevel,
@@ -1401,8 +1403,10 @@ async function ctaClick(intent) {
     access_key: WEB3FORMS_KEY,
     subject: '[Pipeloop Assessment] ' + state.scores.tier + ' LEAD WANTS FOLLOW-UP: ' + state.lead.email,
     from_name: 'Pipeloop Readiness Assessment',
-    intent: intent,
+    name: state.lead.email.split('@')[0],
+    replyto: state.lead.email,
     email: state.lead.email,
+    intent: intent,
     tier: state.scores.tier,
     overall_score: state.scores.overall,
     monetary_cost_monthly: '\u20AC' + formatEuro(state.monetaryCost.monthly),
@@ -1410,10 +1414,12 @@ async function ctaClick(intent) {
   };
 
   try {
-    await fetch('https://api.web3forms.com/submit', {
+    const resp = await fetch('https://api.web3forms.com/submit', {
       method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
       body: JSON.stringify(payload)
     });
+    const result = await resp.json();
+    console.log('Web3Forms CTA response:', result);
   } catch(err) {
     console.error('Web3Forms submission 2 failed:', err);
   }
