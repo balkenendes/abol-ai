@@ -1216,10 +1216,16 @@ async function submitGate(e) {
   };
 
   try {
-    await fetch('https://api.web3forms.com/submit', {
+    const resp = await fetch('https://api.web3forms.com/submit', {
       method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
       body: JSON.stringify(payload)
     });
+    const result = await resp.json();
+    console.log('Web3Forms response:', result);
+    if (!result.success) {
+      console.error('Web3Forms error:', result.message);
+      showToast('Form error: ' + result.message);
+    }
   } catch(err) {
     console.error('Web3Forms submission 1 failed:', err);
     showToast('We had trouble saving your details, but here is your report. Please email sam@pipeloop.ai if you would like a copy.');
