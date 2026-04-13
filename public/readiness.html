@@ -1252,10 +1252,10 @@ function renderResults() {
 
   // Section A — Monetary Cost
   html += '<div class="cost-card">';
-  html += '<div class="cost-label">THIS IS WHAT YOUR CURRENT OUTBOUND IS COSTING YOU</div>';
-  html += '<div class="cost-monthly">\u20AC' + formatEuro(mc.monthly) + ' / month</div>';
-  html += '<div class="cost-annual">\u20AC' + formatEuro(mc.annual) + ' / year</div>';
-  html += '<div class="cost-explainer">Calculated from your founder hours \u00D7 \u20AC150 per hour, plus the gap between your reply rate and the AI-personalized benchmark, applied to your estimated deal value.</div>';
+  html += '<div class="cost-label">ESTIMATED COST OF YOUR CURRENT OUTBOUND APPROACH</div>';
+  html += '<div class="cost-monthly">up to \u20AC' + formatEuro(mc.monthly) + ' / month</div>';
+  html += '<div class="cost-annual">up to \u20AC' + formatEuro(mc.annual) + ' / year</div>';
+  html += '<div class="cost-explainer">Estimated from founder time spent on prospecting, the gap between your current reply rate and an AI-assisted benchmark, and your deal value. Actual numbers depend on your situation.</div>';
   html += '</div>';
 
   // Section B — Score Card
