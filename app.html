@@ -1,0 +1,3007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ABOL.ai — AI and Quantum Security Index</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg: #FAF6EF;
+      --bg-raised: #FFFFFF;
+      --bg-surface: #FDF5E6;
+      --border: #E5DCC8;
+      --border-subtle: #F0E7D4;
+      --border-strong: #3D2817;
+      --text: #14110F;
+      --text-secondary: #4A3E30;
+      --text-muted: #8A7D6A;
+      --accent: #E8650A;
+      --accent-hover: #D25A08;
+      --accent-light: #FBA54E;
+      --accent-lighter: #FFE4C4;
+      --accent-dark: #7C2D12;
+      --accent-darker: #431407;
+      --accent-dim: rgba(232,101,10,0.08);
+      --sage: #3D6B4F;
+      --sage-dim: rgba(61,107,79,0.08);
+      --coral: #B91C1C;
+      --coral-dim: rgba(185,28,28,0.06);
+      --danger: #991B1B;
+      --warning-bg: #FFF7E6;
+      --warning-border: #E8650A;
+      --font-display: 'Manrope', system-ui, sans-serif;
+      --font-body: 'Manrope', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+      --shadow-sm: 0 1px 2px rgba(20,17,15,0.04);
+      --shadow-md: 0 4px 12px rgba(20,17,15,0.06);
+      --shadow-lg: 0 12px 40px rgba(20,17,15,0.08);
+      /* IBCS scenario colors — strict semantic use only */
+      --ibcs-ac: #2C2622;        /* Actual: solid dark */
+      --ibcs-bm: #8A7D6A;        /* Benchmark/PY: medium gray */
+      --ibcs-bu: #C9BCA5;        /* Budget/Plan: lighter gray (or use outlined in code) */
+      --ibcs-pos: #3D6B4F;       /* Favorable variance */
+      --ibcs-neg: #991B1B;       /* Unfavorable variance */
+      --ibcs-grid: #E5DCC8;      /* Reference lines, axis */
+    }
+    /* IBCS hatched pattern for budget/plan */
+    .ibcs-hatch {
+      background-image: repeating-linear-gradient(
+        -45deg,
+        var(--ibcs-ac) 0px,
+        var(--ibcs-ac) 1.5px,
+        transparent 1.5px,
+        transparent 5px
+      );
+      background-color: #fff;
+      border: 1.5px solid var(--ibcs-ac);
+    }
+    /* IBCS typography utilities */
+    .ibcs-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .ibcs-chart { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .ibcs-chart * { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    /* IBCS row striping */
+    .ibcs-row:nth-child(odd) { background: rgba(229, 220, 200, 0.15); }
+
+    /* ===== ATTENTION-GRABBING ANIMATIONS for Benchmark Example dashboard ===== */
+    @keyframes pulseRed {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.55; transform: scale(0.98); }
+    }
+    @keyframes barGrow {
+      from { transform: scaleX(0); transform-origin: left center; }
+      to   { transform: scaleX(1); }
+    }
+    @keyframes gapGrow {
+      0%   { transform: scaleX(0); transform-origin: left center; opacity: 0; }
+      20%  { opacity: 0; }
+      100% { transform: scaleX(1); opacity: 1; }
+    }
+    @keyframes scorePulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.06); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes boardAskPulse {
+      0%, 100% { box-shadow: inset 3px 0 0 var(--accent); background: var(--bg-surface); }
+      50%      { box-shadow: inset 3px 0 0 var(--accent), 0 0 0 2px rgba(232,101,10,0.18); background: #FFE9D0; }
+    }
+
+    .anim-score        { animation: scorePulse 2.4s ease-in-out infinite; display: inline-block; transform-origin: left center; }
+    .anim-red-pulse    { animation: pulseRed 1.6s ease-in-out infinite; display: inline-block; }
+    .anim-bar          { animation: barGrow 1.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    .anim-gap-bar      { animation: gapGrow 2s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: 0.6s; }
+    .anim-board-ask    { animation: boardAskPulse 3.2s ease-in-out infinite; }
+    .anim-shimmer      {
+      background-image: linear-gradient(90deg, transparent 0%, rgba(232,101,10,0.12) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 4s linear infinite;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { cursor: pointer; font-family: var(--font-body); }
+    input, select { font-family: var(--font-body); }
+    ::selection { background: rgba(212, 113, 10, 0.2); color: #1C1412; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out both; }
+    .slide-up { animation: slideUp 0.5s ease-out both; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // =====================================================================
+    // CONFIG
+    // =====================================================================
+    const API_BASE = "http://localhost:8000";
+
+    const SECTORS = [
+      { value: "smb", label: "SMB", desc: "Revenue €50M\u2013€500M" },
+      { value: "corporate", label: "Corporate", desc: "Revenue €500M+" },
+      { value: "financial_services", label: "Financial Services", desc: "Banks, insurance, pensions" }
+    ];
+
+    const EMP_BUCKETS = [
+      { value: "50-100", label: "50\u2013100" },
+      { value: "100-500", label: "100\u2013500" },
+      { value: "500-1000", label: "500\u20131,000" },
+      { value: "1000-5000", label: "1,000\u20135,000" },
+      { value: "5000+", label: "5,000+" }
+    ];
+
+    const REGIONS = [
+      { region: "Western Europe", countries: [
+        "NL|Netherlands","BE|Belgium","LU|Luxembourg","FR|France","DE|Germany",
+        "AT|Austria","CH|Switzerland","LI|Liechtenstein","MC|Monaco"
+      ]},
+      { region: "Northern Europe", countries: [
+        "GB|United Kingdom","IE|Ireland","DK|Denmark","SE|Sweden","NO|Norway",
+        "FI|Finland","IS|Iceland","EE|Estonia","LV|Latvia","LT|Lithuania"
+      ]},
+      { region: "Southern Europe", countries: [
+        "ES|Spain","PT|Portugal","IT|Italy","GR|Greece","MT|Malta","CY|Cyprus",
+        "SI|Slovenia","HR|Croatia","BA|Bosnia & Herzegovina","RS|Serbia",
+        "ME|Montenegro","MK|North Macedonia","AL|Albania","AD|Andorra","SM|San Marino"
+      ]},
+      { region: "Central & Eastern Europe", countries: [
+        "PL|Poland","CZ|Czech Republic","SK|Slovakia","HU|Hungary","RO|Romania",
+        "BG|Bulgaria","UA|Ukraine","MD|Moldova","BY|Belarus"
+      ]},
+      { region: "North America", countries: [
+        "US|United States","CA|Canada","MX|Mexico"
+      ]},
+      { region: "Central America & Caribbean", countries: [
+        "GT|Guatemala","BZ|Belize","SV|El Salvador","HN|Honduras","NI|Nicaragua",
+        "CR|Costa Rica","PA|Panama","CU|Cuba","JM|Jamaica","HT|Haiti",
+        "DO|Dominican Republic","TT|Trinidad & Tobago","BB|Barbados","BS|Bahamas"
+      ]},
+      { region: "South America", countries: [
+        "BR|Brazil","AR|Argentina","CL|Chile","CO|Colombia","PE|Peru",
+        "VE|Venezuela","EC|Ecuador","BO|Bolivia","PY|Paraguay","UY|Uruguay",
+        "GY|Guyana","SR|Suriname"
+      ]},
+      { region: "Middle East", countries: [
+        "AE|United Arab Emirates","SA|Saudi Arabia","QA|Qatar","KW|Kuwait",
+        "BH|Bahrain","OM|Oman","IL|Israel","JO|Jordan","LB|Lebanon",
+        "IQ|Iraq","IR|Iran","YE|Yemen","SY|Syria","TR|Turkey"
+      ]},
+      { region: "Central Asia", countries: [
+        "KZ|Kazakhstan","UZ|Uzbekistan","TM|Turkmenistan","KG|Kyrgyzstan",
+        "TJ|Tajikistan","GE|Georgia","AM|Armenia","AZ|Azerbaijan"
+      ]},
+      { region: "South Asia", countries: [
+        "IN|India","PK|Pakistan","BD|Bangladesh","LK|Sri Lanka","NP|Nepal",
+        "AF|Afghanistan","MV|Maldives","BT|Bhutan"
+      ]},
+      { region: "East Asia", countries: [
+        "CN|China","JP|Japan","KR|South Korea","KP|North Korea","MN|Mongolia",
+        "TW|Taiwan","HK|Hong Kong","MO|Macau"
+      ]},
+      { region: "Southeast Asia", countries: [
+        "SG|Singapore","MY|Malaysia","ID|Indonesia","TH|Thailand","PH|Philippines",
+        "VN|Vietnam","MM|Myanmar","KH|Cambodia","LA|Laos","BN|Brunei","TL|Timor-Leste"
+      ]},
+      { region: "Oceania", countries: [
+        "AU|Australia","NZ|New Zealand","FJ|Fiji","PG|Papua New Guinea",
+        "WS|Samoa","TO|Tonga","VU|Vanuatu"
+      ]},
+      { region: "North Africa", countries: [
+        "MA|Morocco","DZ|Algeria","TN|Tunisia","LY|Libya","EG|Egypt","SD|Sudan"
+      ]},
+      { region: "West Africa", countries: [
+        "NG|Nigeria","GH|Ghana","SN|Senegal","CI|Ivory Coast","ML|Mali",
+        "BF|Burkina Faso","NE|Niger","GN|Guinea","SL|Sierra Leone","LR|Liberia",
+        "TG|Togo","BJ|Benin","MR|Mauritania","GM|Gambia","GW|Guinea-Bissau","CV|Cape Verde"
+      ]},
+      { region: "East Africa", countries: [
+        "KE|Kenya","ET|Ethiopia","TZ|Tanzania","UG|Uganda","RW|Rwanda",
+        "BI|Burundi","SO|Somalia","DJ|Djibouti","ER|Eritrea","SS|South Sudan",
+        "MG|Madagascar","MU|Mauritius","SC|Seychelles"
+      ]},
+      { region: "Central Africa", countries: [
+        "CD|DR Congo","CG|Congo","CM|Cameroon","GA|Gabon","GQ|Equatorial Guinea",
+        "TD|Chad","CF|Central African Republic","ST|S\u00e3o Tom\u00e9 & Pr\u00edncipe"
+      ]},
+      { region: "Southern Africa", countries: [
+        "ZA|South Africa","BW|Botswana","NA|Namibia","ZM|Zambia","ZW|Zimbabwe",
+        "MZ|Mozambique","AO|Angola","MW|Malawi","SZ|Eswatini","LS|Lesotho"
+      ]}
+    ].map(r => ({
+      region: r.region,
+      countries: r.countries.map(s => { const [v, l] = s.split("|"); return { value: v, label: l }; })
+    }));
+
+    const DIM = {
+      readiness:          { label: "Readiness",          icon: "01", color: "#C2850C", desc: "AI + Quantum threat awareness & preparedness" },
+      security_measures:  { label: "Security Measures",  icon: "02", color: "#5F826A", desc: "Technical controls & defense capabilities" },
+      dependencies:       { label: "Dependencies",       icon: "03", color: "#9A7B4F", desc: "Supply chain, vendors & third-party risk" },
+      investment:         { label: "Investment & Business Case", icon: "04", color: "#7A8B6E", desc: "Cyber spend, return on investment & planning" },
+      compliance:         { label: "Compliance",         icon: "05", color: "#8B7355", desc: "Regulatory readiness & audit posture" },
+      governance:         { label: "Governance",         icon: "06", color: "#C45D4A", desc: "Board oversight, accountability & policy" },
+      resilience:         { label: "Resilience",         icon: "07", color: "#6B8A99", desc: "Recovery, continuity & incident response" }
+    };
+
+    const RATINGS = {
+      Leader:    { color: "#166534", bg: "rgba(22,101,52,0.06)",  border: "#166534", emoji: "" },
+      Strong:    { color: "#3D6B4F", bg: "rgba(61,107,79,0.06)", border: "#3D6B4F", emoji: "" },
+      Fair:      { color: "#B45309", bg: "rgba(180,83,9,0.06)",  border: "#B45309", emoji: "" },
+      "At Risk": { color: "#C2410C", bg: "rgba(194,65,12,0.08)", border: "#C2410C", emoji: "" },
+      Critical:  { color: "#991B1B", bg: "rgba(153,27,27,0.08)", border: "#991B1B", emoji: "" }
+    };
+
+    // =====================================================================
+    // DEMO QUESTIONS — 42 questions, 6 per dimension, statistically sound
+    // Designed for Cronbach's alpha > 0.7 per dimension with varied facets
+    // =====================================================================
+    const DEMO_QUESTIONS = [
+      // ── READINESS (6 questions) ─────────────────────────────────────────
+      // ── READINESS (6) ── AI + Quantum threat awareness & preparedness ───
+      {
+        question_id: "Q_RDY_001", dimension: "readiness",
+        text: "How often does your organization review threat intelligence specifically related to AI-enabled attacks?",
+        help: "This includes autonomous vulnerability discovery, AI-generated social engineering, deepfake attacks, and AI-discovered zero-days. Weekly review is best practice for 2026.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "weekly", label: "Weekly or more often", score: 100 },
+          { value: "monthly", label: "Monthly", score: 70 },
+          { value: "quarterly", label: "Quarterly", score: 40 },
+          { value: "ad_hoc", label: "Only when something happens", score: 15 },
+          { value: "never", label: "We do not specifically track AI threats", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RDY_002", dimension: "readiness",
+        text: "If an advanced AI system capable of autonomously discovering and exploiting thousands of zero-day vulnerabilities became publicly available within 6 months, how prepared would your organization be?",
+        help: "State-of-the-art AI models are already demonstrating this capability in controlled settings. Similar tools are expected in open-source within 6\u201318 months.",
+        type: "single_choice", is_future_proofing: true,
+        options: [
+          { value: 1, label: "Not prepared at all \u2014 we would be fully exposed", score: 0 },
+          { value: 2, label: "Minimally prepared \u2014 basic patching only", score: 20 },
+          { value: 3, label: "Some defenses in place but significant gaps", score: 40 },
+          { value: 4, label: "Mostly prepared \u2014 active patching pipeline and monitoring", score: 70 },
+          { value: 5, label: "Fully prepared \u2014 AI-augmented defense running continuously", score: 100 }
+        ]
+      },
+      {
+        question_id: "Q_RDY_003", dimension: "readiness",
+        text: "What is your organization\u2019s stated target date to complete migration to post-quantum cryptography?",
+        help: "Global post-quantum cryptography standards were finalized in August 2024. The US National Security Agency deadline for migration is January 2027.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "completed", label: "Already completed or in final stages", score: 100 },
+          { value: "in_progress_2026", label: "In progress, target completion 2026", score: 90 },
+          { value: "planned_2027", label: "Planned for 2027", score: 70 },
+          { value: "planned_2028_plus", label: "Planned for 2028 or later", score: 40 },
+          { value: "no_plan", label: "No formal plan yet", score: 5 },
+          { value: "unknown", label: "I do not know", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RDY_004", dimension: "readiness",
+        text: "Have you identified and classified all data that would be catastrophic if decrypted 5\u201310 years from now?",
+        help: "State actors are harvesting encrypted data today, expecting quantum computers will decrypt it within a decade. Long-lived secrets such as mergers and acquisitions documents, intellectual property, and citizen data are at highest risk.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "fully", label: "Yes, fully classified with retention policies and quantum-safe migration plan", score: 100 },
+          { value: "partial", label: "Partially \u2014 we know the key data assets but haven\u2019t acted", score: 50 },
+          { value: "aware", label: "Aware of the risk but not yet assessed", score: 15 },
+          { value: "no", label: "No", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RDY_005", dimension: "readiness",
+        text: "Does your organization conduct regular exercises where AI systems actively attempt to breach your defenses?",
+        help: "This goes beyond traditional penetration testing. AI-driven red teaming simulates the speed and scale of real AI-enabled attackers.",
+        type: "single_choice", is_future_proofing: true,
+        options: [
+          { value: "continuous", label: "Continuously \u2014 automated AI-driven testing runs around the clock", score: 100 },
+          { value: "quarterly", label: "Quarterly AI-driven red team engagements", score: 70 },
+          { value: "annual", label: "Annual AI-augmented testing", score: 40 },
+          { value: "human_only", label: "Only traditional human-led penetration testing", score: 20 },
+          { value: "none", label: "No red team activities of any kind", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RDY_006", dimension: "readiness",
+        text: "How would you rate your security team\u2019s expertise in AI-specific attack vectors (prompt injection, model poisoning, training data extraction, adversarial inputs)?",
+        help: "These are distinct from traditional cyber skills. Most security teams have not yet received formal training on AI-specific threats.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "expert", label: "Deep expertise \u2014 dedicated AI security specialists on the team", score: 100 },
+          { value: "trained", label: "Team has received formal training, applies it regularly", score: 75 },
+          { value: "basic", label: "Basic awareness but no hands-on experience", score: 35 },
+          { value: "none", label: "No specific AI security expertise", score: 0 }
+        ]
+      },
+
+      // ── SECURITY MEASURES (6) ── Technical controls & defense capabilities ──
+      {
+        question_id: "Q_SEC_001", dimension: "security_measures",
+        text: "What percentage of your workforce uses phishing-resistant multi-factor authentication (hardware security keys, passkeys) for all critical systems?",
+        help: "SMS and app-based authentication are bypassable by AI-generated social engineering. Phishing-resistant hardware authentication is the 2026 minimum.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "100", label: "100% \u2014 all users, all critical systems", score: 100 },
+          { value: "75_99", label: "75\u201399%", score: 75 },
+          { value: "50_74", label: "50\u201374%", score: 50 },
+          { value: "25_49", label: "25\u201349%", score: 25 },
+          { value: "under_25", label: "Less than 25% or unknown", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_SEC_002", dimension: "security_measures",
+        text: "What is your median time from vulnerability disclosure to patch deployment in production for critical vulnerabilities?",
+        help: "Advanced AI systems can weaponize a newly disclosed vulnerability within hours. Your patch window must shrink accordingly.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "under_24h", label: "Under 24 hours", score: 100 },
+          { value: "1_3_days", label: "1\u20133 days", score: 75 },
+          { value: "1_week", label: "Within 1 week", score: 50 },
+          { value: "1_month", label: "Within 1 month", score: 25 },
+          { value: "over_month", label: "More than 1 month or unknown", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_SEC_003", dimension: "security_measures",
+        text: "Does your organization have around-the-clock security operations coverage with AI-augmented alert triage?",
+        help: "AI-enabled attacks compress timelines from days to minutes. Business-hours-only monitoring is no longer sufficient.",
+        type: "single_choice", is_future_proofing: true,
+        options: [
+          { value: "24_7_ai", label: "Yes, around-the-clock with AI-augmented triage", score: 100 },
+          { value: "24_7_human", label: "Yes, around-the-clock but human-only triage", score: 70 },
+          { value: "mssp", label: "Outsourced to a managed security provider", score: 50 },
+          { value: "business_hours", label: "Business hours only", score: 25 },
+          { value: "none", label: "No dedicated security operations", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_SEC_004", dimension: "security_measures",
+        text: "Do you maintain a complete, real-time cryptographic inventory of every encryption certificate, virtual private network tunnel, secure shell key, and signed document in your environment?",
+        help: "This is a prerequisite for any post-quantum migration. Most organizations have 30\u201370% visibility at best.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "realtime", label: "Yes, real-time automated inventory covering all assets", score: 100 },
+          { value: "quarterly", label: "Quarterly manual inventory", score: 60 },
+          { value: "annual", label: "Annual inventory", score: 30 },
+          { value: "partial", label: "Partial visibility only", score: 15 },
+          { value: "none", label: "No formal cryptographic inventory", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_SEC_005", dimension: "security_measures",
+        text: "How do you protect against data exfiltration through employee use of AI tools (copying sensitive data into chatbots, code assistants, image generators)?",
+        help: "Shadow AI usage is now one of the top data loss vectors. Many organizations discover leakage only after an incident.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "dlp_ai", label: "Real-time monitoring and blocking of sensitive data going to AI services", score: 100 },
+          { value: "policy_monitored", label: "Policy in place with periodic monitoring", score: 65 },
+          { value: "policy_only", label: "Written policy but no technical enforcement", score: 30 },
+          { value: "no_policy", label: "No specific policy or controls", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_SEC_006", dimension: "security_measures",
+        text: "What is the scope of your network segmentation and zero-trust implementation?",
+        help: "Flat networks allow attackers to move laterally within minutes. Micro-segmentation limits blast radius from any single breach.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "full_zt", label: "Full zero-trust architecture with micro-segmentation and continuous verification", score: 100 },
+          { value: "partial_zt", label: "Zero-trust principles applied to critical systems only", score: 70 },
+          { value: "segmented", label: "Traditional network segmentation (broad zones)", score: 40 },
+          { value: "flat", label: "Largely flat network with perimeter-only defense", score: 10 },
+          { value: "unknown", label: "I do not know our network architecture", score: 0 }
+        ]
+      },
+
+      // ── DEPENDENCIES (6) ── Supply chain, vendors & third-party risk ────
+      {
+        question_id: "Q_DEP_001", dimension: "dependencies",
+        text: "Do you maintain a complete software component inventory for every production system, updated automatically on every deployment?",
+        help: "This is the foundation for responding to supply chain attacks. Required by the EU Cyber Resilience Act for many products from 2027.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "automated", label: "Yes, automated and updated on every deploy", score: 100 },
+          { value: "manual_current", label: "Manual but kept reasonably current", score: 60 },
+          { value: "manual_stale", label: "Manual and often outdated", score: 25 },
+          { value: "none", label: "No formal software component inventory", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_DEP_002", dimension: "dependencies",
+        text: "Have you conducted a formal security review of every AI vendor and large language model provider your organization uses, including data flow analysis and prompt injection risk?",
+        help: "AI vendors are a new and expanding attack surface. Data leakage via shared context, indirect prompt injection, and model poisoning are emerging risks.",
+        type: "single_choice", is_future_proofing: true,
+        options: [
+          { value: "all_reviewed", label: "Yes, all AI vendors formally reviewed with recurring assessments", score: 100 },
+          { value: "major_only", label: "Major vendors reviewed, smaller ones not yet", score: 50 },
+          { value: "shadow_ai", label: "No \u2014 employees use AI tools without formal review", score: 10 },
+          { value: "no_ai", label: "We do not use any AI vendor services", score: 70 }
+        ]
+      },
+      {
+        question_id: "Q_DEP_003", dimension: "dependencies",
+        text: "What percentage of your critical business operations depend on a single cloud provider or software vendor with no redundancy?",
+        help: "Concentration risk is systemic. A single provider outage should not halt your entire business.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "under_20", label: "Less than 20% \u2014 strong multi-vendor posture", score: 100 },
+          { value: "20_40", label: "20\u201340%", score: 70 },
+          { value: "40_60", label: "40\u201360%", score: 40 },
+          { value: "over_60", label: "Over 60%", score: 15 },
+          { value: "unknown", label: "We have not measured this", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_DEP_004", dimension: "dependencies",
+        text: "How do you detect if an open-source software dependency has been compromised (typosquatting, maintainer takeover, malicious code injections)?",
+        help: "Advanced AI systems can generate convincing malicious code contributions at scale. Detection must be automated and continuous.",
+        type: "single_choice", is_future_proofing: true,
+        options: [
+          { value: "continuous_ai", label: "Continuous AI-powered scanning with automated blocking", score: 100 },
+          { value: "signed_pinned", label: "Signed commits and pinned dependency versions", score: 75 },
+          { value: "periodic_scans", label: "Periodic vulnerability scans only", score: 40 },
+          { value: "trust_registry", label: "We trust the package registries", score: 10 },
+          { value: "no_process", label: "No specific process", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_DEP_005", dimension: "dependencies",
+        text: "Do your critical vendor contracts include cybersecurity requirements, breach notification obligations, and post-quantum migration commitments?",
+        help: "Your security posture is only as strong as your weakest vendor. Contractual obligations are the only enforceable mechanism.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "all_vendors", label: "Yes, for all vendors handling sensitive data or critical services", score: 100 },
+          { value: "top_vendors", label: "For top 10\u201320 vendors only", score: 60 },
+          { value: "ad_hoc", label: "Only when vendors volunteer it", score: 20 },
+          { value: "none", label: "No cybersecurity requirements in vendor contracts", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_DEP_006", dimension: "dependencies",
+        text: "How quickly can you identify all systems affected when a critical vulnerability is announced in a widely-used software component?",
+        help: "When a critical vulnerability is disclosed in a component like a logging library or web framework, speed of identification directly determines your exposure window.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "under_1h", label: "Under 1 hour \u2014 automated dependency mapping", score: 100 },
+          { value: "under_24h", label: "Within 24 hours", score: 70 },
+          { value: "days", label: "Takes several days of manual investigation", score: 30 },
+          { value: "unknown", label: "We would not know where to start", score: 0 }
+        ]
+      },
+
+      // ── INVESTMENT & BUSINESS CASE (6) ── Spend, ROI & planning ────────
+      {
+        question_id: "Q_INV_001", dimension: "investment",
+        text: "What percentage of your total IT budget is allocated to cybersecurity?",
+        help: "Industry benchmarks: small and mid-size companies 8\u201312%, large corporates 10\u201314%, financial services 14\u201320%. Spending below benchmark indicates underinvestment; significantly above may indicate inefficiency.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "in_range", label: "Within our sector\u2019s benchmark range", score: 100 },
+          { value: "slightly_low", label: "Slightly below benchmark (1\u20133 percentage points)", score: 70 },
+          { value: "slightly_high", label: "Slightly above benchmark (1\u20133 percentage points)", score: 70 },
+          { value: "significantly_off", label: "Significantly outside our sector\u2019s range", score: 25 },
+          { value: "unknown", label: "I do not know our cybersecurity budget ratio", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_INV_002", dimension: "investment",
+        text: "Has your organization allocated a specific budget for post-quantum cryptography migration over the next 3 years?",
+        help: "Migration to post-quantum cryptography is a multi-year, capital-intensive project. Organizations without dedicated budget will fall behind the 2027 deadline.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "funded_plan", label: "Yes, with a funded multi-year migration roadmap", score: 100 },
+          { value: "partial_budget", label: "Partial budget allocated, plan in development", score: 60 },
+          { value: "awareness_only", label: "Leadership is aware but no budget has been approved", score: 25 },
+          { value: "no_budget", label: "No budget or plans for post-quantum migration", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_INV_003", dimension: "investment",
+        text: "Can you quantify the return on investment or cost-of-breach-avoidance for each major cybersecurity investment?",
+        help: "Mature security organizations translate every major investment to risk reduction in monetary terms. This is increasingly required for board-level conversations under European governance rules.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "fully", label: "Yes, fully quantified with financial models per investment", score: 100 },
+          { value: "major_only", label: "For major investments only", score: 60 },
+          { value: "qualitative", label: "Qualitative justifications only (no financial modeling)", score: 25 },
+          { value: "no", label: "We do not measure return on cybersecurity investment", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_INV_004", dimension: "investment",
+        text: "How many distinct security tools and vendor subscriptions does your organization currently pay for?",
+        help: "The average large organization has 40+ security tools with significant overlap. Tool sprawl wastes budget and creates integration debt that weakens overall defense.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "under_10", label: "Under 10 \u2014 consolidated, well-integrated stack", score: 100 },
+          { value: "10_20", label: "10\u201320 tools", score: 75 },
+          { value: "20_40", label: "20\u201340 tools", score: 40 },
+          { value: "over_40", label: "Over 40 tools", score: 15 },
+          { value: "unknown", label: "We have no central inventory of security tools", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_INV_005", dimension: "investment",
+        text: "When was the last time you competitively benchmarked your cybersecurity contract prices against the market?",
+        help: "IT security contracts typically contain 15\u201330% negotiation room. Regular benchmarking is standard in procurement-mature organizations and directly improves cost efficiency.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "last_year", label: "Within the last 12 months", score: 100 },
+          { value: "1_2_years", label: "1\u20132 years ago", score: 60 },
+          { value: "2_5_years", label: "2\u20135 years ago", score: 25 },
+          { value: "never", label: "Never formally benchmarked", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_INV_006", dimension: "investment",
+        text: "What is your estimated total cost exposure if your organization experienced a major cyber breach today (including downtime, regulatory fines, legal costs, reputation damage)?",
+        help: "Understanding your breach exposure in concrete financial terms is critical for justifying cybersecurity investment. The European average for a major breach is over €4 million.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "modeled", label: "Formally modeled with scenario analysis and insurance coverage matched to it", score: 100 },
+          { value: "estimated", label: "Rough estimate exists, partially covered by insurance", score: 60 },
+          { value: "gut_feel", label: "Informal gut feel, no formal modeling", score: 25 },
+          { value: "unknown", label: "We have not estimated our breach cost exposure", score: 0 }
+        ]
+      },
+
+      // ── COMPLIANCE (6) ── Regulatory readiness & audit posture ──────────
+      {
+        question_id: "Q_CMP_001", dimension: "compliance",
+        text: "European Network and Information Security Directive (NIS2): Is your organization in scope, and if yes, are you fully compliant with all technical, organizational, and incident reporting requirements?",
+        help: "This directive took effect in October 2024. Essential and Important entities face fines up to 2% of global turnover. The scope is broader than most organizations realize.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "in_scope_compliant", label: "In scope and fully compliant", score: 100 },
+          { value: "in_scope_partial", label: "In scope, partially compliant (gaps identified)", score: 50 },
+          { value: "in_scope_noncompliant", label: "In scope, not yet compliant", score: 10 },
+          { value: "not_in_scope", label: "Verified not in scope", score: 100 },
+          { value: "unknown", label: "Unsure whether we are in scope", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_CMP_002", dimension: "compliance",
+        text: "EU AI Act: Have you inventoried all AI systems in use across your organization and classified them by risk level (prohibited, high-risk, limited-risk, minimal-risk)?",
+        help: "The EU AI Act fully applies from August 2026. Unauthorized high-risk AI deployments and shadow AI usage are the biggest compliance blind spots.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "complete", label: "Complete inventory with formal risk classification for every system", score: 100 },
+          { value: "partial", label: "Partial inventory \u2014 major systems only", score: 50 },
+          { value: "aware", label: "Aware of requirements, assessment not yet started", score: 15 },
+          { value: "no", label: "No AI systems inventory exists", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_CMP_003", dimension: "compliance",
+        text: "Digital Operational Resilience Act: If you are a financial entity, is your information and communications technology risk management framework compliant and tested?",
+        help: "This regulation applies to EU financial entities since January 2025. It requires a comprehensive technology risk framework, incident reporting, and third-party risk management.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "compliant", label: "Financial entity, fully compliant and tested", score: 100 },
+          { value: "partial", label: "Financial entity, partially compliant", score: 50 },
+          { value: "noncompliant", label: "Financial entity, not yet compliant", score: 0 },
+          { value: "not_financial", label: "Not a financial entity \u2014 not applicable", score: 100 },
+          { value: "unknown", label: "Unsure of our status", score: 20 }
+        ]
+      },
+      {
+        question_id: "Q_CMP_004", dimension: "compliance",
+        text: "Can your organization detect, investigate, and submit an initial incident report to the relevant authority within 24 hours of a significant cybersecurity event?",
+        help: "European cybersecurity rules require a 24-hour early warning, 72-hour formal notification, and a one-month final report. Most organizations fail the 24-hour window when actually tested.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "tested_yes", label: "Yes, tested and proven under 24 hours in a drill", score: 100 },
+          { value: "under_72", label: "Likely within 72 hours, but 24-hour window is uncertain", score: 60 },
+          { value: "best_effort", label: "Best effort, not formally tested", score: 25 },
+          { value: "no", label: "No formal incident reporting process in place", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_CMP_005", dimension: "compliance",
+        text: "Do you have a current, externally validated data protection impact assessment for every high-risk processing activity?",
+        help: "Data protection regulations require impact assessments before processing data in ways that pose high risk to individuals. External validation significantly strengthens audit defensibility.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "all_external", label: "Yes, for all high-risk activities, externally validated", score: 100 },
+          { value: "all_internal", label: "Yes, for all, but internally reviewed only", score: 70 },
+          { value: "partial", label: "For some activities only", score: 35 },
+          { value: "none", label: "No formal impact assessments", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_CMP_006", dimension: "compliance",
+        text: "How do you track changes in cybersecurity and AI regulations across all jurisdictions where you operate?",
+        help: "Regulatory landscapes are evolving rapidly across the EU, US, UK, and Asia. Manual tracking becomes unreliable once you operate in more than 2\u20133 jurisdictions.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "automated", label: "Automated regulatory monitoring tool with assigned owners for each change", score: 100 },
+          { value: "dedicated_team", label: "Dedicated compliance team actively tracks changes", score: 75 },
+          { value: "law_firm", label: "We rely on our external law firm to alert us", score: 45 },
+          { value: "ad_hoc", label: "Ad hoc \u2014 we find out when something becomes urgent", score: 10 },
+          { value: "none", label: "No systematic tracking", score: 0 }
+        ]
+      },
+
+      // ── GOVERNANCE (6) ── Board oversight, accountability & policy ──────
+      {
+        question_id: "Q_GOV_001", dimension: "governance",
+        text: "How often does your board of directors receive a formal cybersecurity briefing that specifically covers AI-enabled and quantum-computing threats?",
+        help: "European directives now make board members personally liable for cybersecurity oversight. Quarterly briefings are the minimum best practice.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "monthly", label: "Monthly or more frequently", score: 100 },
+          { value: "quarterly", label: "Quarterly", score: 85 },
+          { value: "biannual", label: "Twice per year", score: 50 },
+          { value: "annual", label: "Annually", score: 25 },
+          { value: "ad_hoc", label: "Only when a major incident occurs", score: 5 },
+          { value: "never", label: "The board does not receive cybersecurity briefings", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_GOV_002", dimension: "governance",
+        text: "Does your chief information security officer (or equivalent role) have a direct reporting line to the chief executive or board, with authority to halt projects on security grounds?",
+        help: "Security leadership buried under IT management often cannot escalate fast enough. Direct access to the executive level is the benchmark for mature governance.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "ceo_board_halt", label: "Direct to chief executive or board, with formal halt authority", score: 100 },
+          { value: "ceo_no_halt", label: "Direct to chief executive, but no formal halt authority", score: 70 },
+          { value: "it_reports", label: "Reports to the chief information officer or IT director", score: 40 },
+          { value: "buried", label: "Further down in the organizational hierarchy", score: 15 },
+          { value: "no_role", label: "No dedicated security leadership role", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_GOV_003", dimension: "governance",
+        text: "When were your core security policies (acceptable AI use, incident response, data classification, quantum-readiness) last reviewed and updated?",
+        help: "Policies older than 12 months almost certainly do not address current AI and quantum threats. Annual reviews are the minimum; quarterly reviews are recommended for fast-moving areas.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "under_6m", label: "All reviewed and updated in the last 6 months", score: 100 },
+          { value: "6_12m", label: "Updated within the last 12 months", score: 70 },
+          { value: "12_24m", label: "12\u201324 months old", score: 30 },
+          { value: "older", label: "Older than 24 months", score: 5 },
+          { value: "no_policies", label: "No formal policies on these topics", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_GOV_004", dimension: "governance",
+        text: "Does your organization have a formal AI governance committee responsible for approving AI use cases, monitoring deployed models, and managing AI-specific risks?",
+        help: "The EU AI Act requires governance structures for high-risk AI. Beyond compliance, a governance committee prevents uncontrolled AI adoption and model drift.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "formal_monthly", label: "Yes, formal committee meeting monthly or more", score: 100 },
+          { value: "formal_quarterly", label: "Formal committee, quarterly meetings", score: 75 },
+          { value: "informal", label: "Informal group, meets ad hoc", score: 35 },
+          { value: "planned", label: "Planned but not yet established", score: 15 },
+          { value: "none", label: "No AI governance structure of any kind", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_GOV_005", dimension: "governance",
+        text: "Is there a named individual in your organization who is personally accountable for post-quantum cryptography migration, with a defined timeline and budget?",
+        help: "Without clear ownership, post-quantum migration tends to stall. The most successful programs have a single accountable leader with executive sponsorship.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "named_funded", label: "Yes, named owner with approved budget and timeline", score: 100 },
+          { value: "named_no_budget", label: "Named owner, but budget and timeline not yet approved", score: 50 },
+          { value: "shared", label: "Responsibility is shared across teams without clear ownership", score: 20 },
+          { value: "none", label: "No one is specifically accountable for this", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_GOV_006", dimension: "governance",
+        text: "Does your organization have a cyber risk appetite statement that has been formally approved by the board and is actively used in decision-making?",
+        help: "A risk appetite statement defines how much cyber risk the organization is willing to accept. Without one, investment decisions and risk trade-offs are made inconsistently.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "approved_active", label: "Yes, board-approved and actively referenced in decisions", score: 100 },
+          { value: "approved_shelf", label: "Board-approved but rarely referenced in practice", score: 50 },
+          { value: "draft", label: "In draft or under development", score: 20 },
+          { value: "none", label: "No risk appetite statement exists", score: 0 }
+        ]
+      },
+
+      // ── RESILIENCE (6) ── Recovery, continuity & incident response ──────
+      {
+        question_id: "Q_RES_001", dimension: "resilience",
+        text: "How frequently do you test full recovery from a ransomware scenario where AI-orchestrated attacks have specifically targeted and disabled your backup infrastructure?",
+        help: "Modern AI-enabled ransomware specifically targets backup systems. Untested backups are effectively worthless in a real incident.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "monthly", label: "Monthly full recovery drills including backup compromise scenarios", score: 100 },
+          { value: "quarterly", label: "Quarterly drills", score: 75 },
+          { value: "annual", label: "Annual drill", score: 40 },
+          { value: "tabletop", label: "Tabletop exercises only \u2014 no actual recovery tested", score: 20 },
+          { value: "never", label: "Recovery has never been tested", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RES_002", dimension: "resilience",
+        text: "What is your organization\u2019s tested recovery time objective for critical business systems after a major cyber incident?",
+        help: "This is the actual tested time, not the planned or aspirational target. Many organizations discover their real recovery time is 5\u201310 times longer than expected.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "under_4h", label: "Under 4 hours \u2014 tested and verified", score: 100 },
+          { value: "4_24h", label: "4\u201324 hours \u2014 tested", score: 75 },
+          { value: "1_7d", label: "1\u20137 days", score: 40 },
+          { value: "over_7d", label: "More than 7 days or unknown", score: 10 },
+          { value: "never_tested", label: "We have never tested actual recovery time", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RES_003", dimension: "resilience",
+        text: "Does your incident response plan specifically address AI-enabled attack scenarios (autonomous exploitation, AI-generated social engineering, deepfake impersonation of executives)?",
+        help: "Traditional incident response playbooks were not designed for the speed and sophistication of AI-enabled attacks. Specific procedures are needed.",
+        type: "single_choice", is_future_proofing: true,
+        options: [
+          { value: "specific_tested", label: "Yes, specific AI-attack playbooks that have been tested in exercises", score: 100 },
+          { value: "specific_untested", label: "Yes, documented but not yet tested in exercises", score: 60 },
+          { value: "generic", label: "We have a general incident response plan, not AI-specific", score: 30 },
+          { value: "none", label: "No formal incident response plan", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RES_004", dimension: "resilience",
+        text: "Do you maintain offline, immutable backups that are physically separated from your production network and tested regularly?",
+        help: "If an attacker gains administrative access to your network, online backups can be encrypted or deleted. Offline and immutable copies are the last line of defense.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "offline_tested", label: "Yes, offline immutable backups tested at least quarterly", score: 100 },
+          { value: "offline_untested", label: "Offline backups exist but are not regularly tested", score: 60 },
+          { value: "cloud_immutable", label: "Cloud-based immutable backups only (no offline copy)", score: 45 },
+          { value: "online_only", label: "Online backups only, connected to the production network", score: 15 },
+          { value: "none", label: "No structured backup strategy", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RES_005", dimension: "resilience",
+        text: "Does your organization have pre-arranged contracts with external incident response and forensics providers, with guaranteed response times?",
+        help: "During a major incident, incident response providers are often fully booked. Pre-arranged retainers with guaranteed response times (typically under 4 hours) are critical.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "retainer_tested", label: "Yes, retainer in place with guaranteed response time, tested annually", score: 100 },
+          { value: "retainer_untested", label: "Retainer in place but never activated or tested", score: 65 },
+          { value: "identified", label: "Providers identified but no formal agreement", score: 30 },
+          { value: "none", label: "We would need to find a provider during the incident", score: 0 }
+        ]
+      },
+      {
+        question_id: "Q_RES_006", dimension: "resilience",
+        text: "Has your organization conducted a formal business impact analysis that quantifies the financial cost of downtime per hour for each critical business process?",
+        help: "Without knowing the cost of downtime, it is impossible to make rational investment decisions about resilience. This analysis also drives recovery prioritization during an incident.",
+        type: "single_choice", is_future_proofing: false,
+        options: [
+          { value: "current_quantified", label: "Yes, current analysis with per-hour cost estimates for all critical processes", score: 100 },
+          { value: "partial", label: "Partial analysis \u2014 covers some critical processes", score: 55 },
+          { value: "outdated", label: "Analysis exists but is more than 2 years old", score: 25 },
+          { value: "none", label: "No formal business impact analysis has been conducted", score: 0 }
+        ]
+      }
+    ];
+
+    // Sector weight multipliers — 7 dimensions
+    const SECTOR_WEIGHTS = {
+      smb:                { readiness: 1.0, security_measures: 1.5, dependencies: 1.0, investment: 1.3, compliance: 1.2, governance: 1.0, resilience: 1.4 },
+      corporate:          { readiness: 1.5, security_measures: 1.5, dependencies: 1.8, investment: 1.0, compliance: 2.0, governance: 1.8, resilience: 1.5 },
+      financial_services: { readiness: 2.5, security_measures: 1.5, dependencies: 2.2, investment: 1.2, compliance: 3.0, governance: 2.5, resilience: 2.0 }
+    };
+
+    function computeRating(pct) {
+      if (pct >= 85) return "Leader";
+      if (pct >= 70) return "Strong";
+      if (pct >= 50) return "Fair";
+      if (pct >= 30) return "At Risk";
+      return "Critical";
+    }
+
+    function computeResults(answers, sector) {
+      const weights = SECTOR_WEIGHTS[sector] || SECTOR_WEIGHTS.smb;
+      const dimScores = {};
+
+      // Aggregate per dimension
+      for (const q of DEMO_QUESTIONS) {
+        const a = answers[q.question_id];
+        if (a === undefined) continue;
+        const opt = q.options.find(o => String(o.value) === String(a));
+        const raw = opt ? opt.score : 0;
+        const w = weights[q.dimension] || 1.0;
+        if (!dimScores[q.dimension]) dimScores[q.dimension] = { weighted: 0, maxWeighted: 0 };
+        dimScores[q.dimension].weighted += raw * w;
+        dimScores[q.dimension].maxWeighted += 100 * w;
+      }
+
+      let totalW = 0, totalMax = 0;
+      const dimensions = {};
+      for (const [dim, data] of Object.entries(dimScores)) {
+        const pct = data.maxWeighted > 0 ? (data.weighted / data.maxWeighted) * 100 : 0;
+        dimensions[dim] = Math.round(pct * 10) / 10;
+        totalW += data.weighted;
+        totalMax += data.maxWeighted;
+      }
+
+      const overall = totalMax > 0 ? (totalW / totalMax) * 100 : 0;
+      const overallRound = Math.round(overall * 10) / 10;
+
+      return {
+        overall_percentage: overallRound,
+        rating: computeRating(overallRound),
+        sector,
+        dimensions
+      };
+    }
+
+    // =====================================================================
+    // SHARED UI COMPONENTS
+    // =====================================================================
+    function Container({ children, maxWidth = 1120 }) {
+      return <div style={{ maxWidth, margin: "0 auto", padding: "0 32px" }}>{children}</div>;
+    }
+
+    function Badge({ children, color = "var(--accent)", style = {} }) {
+      return (
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px",
+          background: "var(--accent-lighter)", border: "1px solid " + color,
+          borderRadius: 20, fontSize: 11, color: "var(--accent-darker)", fontWeight: 600,
+          letterSpacing: 0.3, fontFamily: "var(--font-body)", ...style
+        }}>{children}</span>
+      );
+    }
+
+    function Card({ children, style = {}, hover = false }) {
+      const [h, setH] = useState(false);
+      return (
+        <div
+          onMouseEnter={() => hover && setH(true)}
+          onMouseLeave={() => hover && setH(false)}
+          style={{
+            background: "var(--bg-raised)", border: "1px solid var(--border)",
+            borderRadius: 8, padding: 24,
+            boxShadow: h ? "var(--shadow-md)" : "var(--shadow-sm)",
+            transition: "all 0.2s ease",
+            transform: h ? "translateY(-2px)" : "translateY(0)",
+            ...style
+          }}>{children}</div>
+      );
+    }
+
+    function Btn({ children, onClick, disabled, loading, secondary, arrow = true, style = {} }) {
+      return (
+        <button onClick={onClick} disabled={disabled || loading} style={{
+          display: "inline-flex", alignItems: "center", gap: 8,
+          padding: "14px 22px",
+          background: secondary ? "var(--bg-raised)" : (disabled ? "#E5DCC8" : "var(--accent)"),
+          border: secondary ? "1px solid var(--border-strong)" : "1px solid " + (disabled ? "#E5DCC8" : "var(--accent)"),
+          borderRadius: 6, color: disabled ? "var(--text-muted)" : (secondary ? "var(--text)" : "#fff"),
+          fontSize: 14, fontWeight: 600, letterSpacing: -0.1,
+          cursor: disabled ? "not-allowed" : "pointer",
+          opacity: loading ? 0.6 : 1, transition: "all 0.15s",
+          fontFamily: "var(--font-body)",
+          boxShadow: secondary ? "none" : "0 1px 2px rgba(0,0,0,0.05)",
+          ...style
+        }}>
+          <span>{loading ? "Processing..." : children}</span>
+          {arrow && !loading && <span style={{ fontSize: 16, lineHeight: 1 }}>{"\u2192"}</span>}
+        </button>
+      );
+    }
+
+    function Label({ children, color = "var(--accent)" }) {
+      return (
+        <div style={{
+          fontSize: 11, fontWeight: 600, color, letterSpacing: 1,
+          textTransform: "uppercase", marginBottom: 12,
+          fontFamily: "var(--font-mono)"
+        }}>{children}</div>
+      );
+    }
+
+    // =====================================================================
+    // NAVBAR
+    // =====================================================================
+    function NavBar({ onLogo, mode, onStart, onSample }) {
+      return (
+        <div style={{
+          position: "sticky", top: 0, zIndex: 100,
+          background: "rgba(250,246,239,0.95)", backdropFilter: "blur(12px)",
+          borderBottom: "1px solid var(--border-subtle)", padding: "16px 0"
+        }}>
+          <Container maxWidth={860}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div onClick={onLogo} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 0 }}>
+                {/* Logo mark — orange hexagon with A (acts as first letter of ABOL.ai) */}
+                <div style={{
+                  width: 42, height: 42,
+                  flexShrink: 0,
+                  filter: "drop-shadow(0 2px 4px rgba(232,101,10,0.22))",
+                  marginRight: 2
+                }}>
+                  <svg width="42" height="42" viewBox="0 0 34 34" style={{ display: "block" }}>
+                    <path
+                      d="M 17 2 L 30 9.5 L 30 24.5 L 17 32 L 4 24.5 L 4 9.5 Z"
+                      fill="var(--accent)"
+                    />
+                    <path
+                      d="M 8 27 L 15 7 L 19 7 L 26 27 L 22 27 L 20.4 22.3 L 13.6 22.3 L 12 27 Z M 14.8 19 L 17 12.8 L 19.2 19 Z"
+                      fill="#fff"
+                      fillRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                {/* Wordmark — "BOL.ai" continues the A in the hexagon */}
+                <span style={{
+                  fontSize: 28, fontWeight: 800, color: "var(--text)",
+                  letterSpacing: -1, lineHeight: 1
+                }}>BOL<span style={{ color: "var(--accent)" }}>.ai</span></span>
+              </div>
+
+              {/* CTAs on the right of navbar */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {onSample && (
+                  <button onClick={onSample} style={{
+                    padding: "8px 14px",
+                    background: "transparent",
+                    border: "1px solid var(--border-strong)",
+                    borderRadius: 6,
+                    color: "var(--text)",
+                    fontSize: 13, fontWeight: 600,
+                    fontFamily: "var(--font-body)",
+                    cursor: "pointer",
+                    transition: "all 0.15s"
+                  }}>See sample report</button>
+                )}
+                {onStart && (
+                  <button onClick={onStart} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "8px 14px",
+                    background: "var(--accent)",
+                    border: "1px solid var(--accent)",
+                    borderRadius: 6,
+                    color: "#fff",
+                    fontSize: 13, fontWeight: 600,
+                    fontFamily: "var(--font-body)",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                    transition: "all 0.15s"
+                  }}>
+                    Start free assessment
+                    <span style={{ fontSize: 14, lineHeight: 1 }}>{"\u2192"}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </Container>
+        </div>
+      );
+    }
+
+    // =====================================================================
+    // LANDING PAGE
+    // =====================================================================
+    function Landing({ onStart, onSample }) {
+      return (
+        <div>
+          {/* HERO — asymmetric editorial, IBCS-aligned */}
+          <div style={{ padding: "56px 0 72px", position: "relative", overflow: "hidden" }}>
+            {/* Axis-scale background — rhymes with dashboard below */}
+            <div style={{
+              position: "absolute", left: 0, right: 0, bottom: 60, height: 120, pointerEvents: "none",
+              opacity: 0.5
+            }}>
+              <Container>
+                <div style={{ position: "relative", height: "100%" }}>
+                  {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(v => (
+                    <React.Fragment key={v}>
+                      <div style={{
+                        position: "absolute", left: v + "%", bottom: 20,
+                        width: 1, height: v % 50 === 0 ? 14 : v % 25 === 0 ? 10 : 6,
+                        background: "var(--ibcs-ac)", opacity: 0.15
+                      }} />
+                      {v % 25 === 0 && (
+                        <div style={{
+                          position: "absolute", left: v + "%", bottom: 0,
+                          transform: "translateX(-50%)",
+                          fontSize: 9, fontFamily: "var(--font-mono)", color: "var(--text-muted)",
+                          opacity: 0.5, fontWeight: 600, letterSpacing: 0.5
+                        }}>{v}</div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </Container>
+            </div>
+
+            <Container maxWidth={860}>
+              {/* Hero — optimized for busy IT directors: scannable in 10 seconds */}
+              <div className="fade-in" style={{ marginBottom: 48 }}>
+
+                {/* H1 — product name */}
+                <h1 style={{
+                  fontSize: "clamp(44px, 5.4vw, 72px)", fontWeight: 800, lineHeight: 1.0,
+                  marginBottom: 20, color: "var(--text)", letterSpacing: -2.5
+                }}>
+                  <span style={{ color: "var(--accent)" }}>AI &amp; Quantum</span><br />
+                  Security Index
+                </h1>
+
+                <p style={{
+                  fontSize: 22, color: "var(--text)", lineHeight: 1.2, fontWeight: 800,
+                  marginBottom: 28, maxWidth: 680, letterSpacing: -0.5
+                }}>
+                  <span style={{ color: "var(--ibcs-ac)" }}>Benchmark.</span>{" "}
+                  <span style={{ color: "var(--accent)" }}>Business case.</span>{" "}
+                  <span style={{ color: "var(--accent-dark)" }}>Knowledge sharing.</span>
+                </p>
+
+                {/* WHY NOW — 3 card row */}
+                <div style={{ padding: "20px 0", marginBottom: 20, borderTop: "1px solid var(--ibcs-ac)" }}>
+                  <div style={{
+                    fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700,
+                    letterSpacing: 1.5, textTransform: "uppercase", color: "var(--coral)",
+                    marginBottom: 14
+                  }}>Why now</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                    {[
+                      { stat: "+44%",     label: "(AI) attacks on public apps",     source: "IBM 2026" },
+                      { stat: "€10M",     label: "max NIS2 fine",                   source: "EU directive" },
+                      { stat: "12–36 mo", label: "quantum breaks crypto",           source: "Google QAI 2026" }
+                    ].map((c, i) => (
+                      <div key={i} style={{
+                        background: "#fff",
+                        border: "1px solid var(--border)",
+                        borderRadius: 6,
+                        padding: "14px 14px",
+                        boxShadow: "var(--shadow-sm)",
+                        display: "grid", gridTemplateColumns: "auto 1fr", gap: 10,
+                        alignItems: "baseline"
+                      }}>
+                        <div style={{
+                          fontSize: 18, fontWeight: 800, color: "var(--coral)",
+                          fontFamily: "var(--font-mono)", letterSpacing: -0.5, lineHeight: 1,
+                          whiteSpace: "nowrap"
+                        }}>{c.stat}</div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, color: "var(--text)", lineHeight: 1.3, marginBottom: 6, whiteSpace: "nowrap" }}>
+                            {c.label}
+                          </div>
+                          <div style={{
+                            fontSize: 9, color: "var(--text-muted)",
+                            fontFamily: "var(--font-mono)", letterSpacing: 0.5,
+                            textTransform: "uppercase", fontWeight: 600
+                          }}>{c.source}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CTAs + meta strip — single row */}
+                <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                  <Btn onClick={onStart}>Start free assessment</Btn>
+                  <div style={{
+                    marginLeft: "auto", display: "flex", alignItems: "center", gap: 14,
+                    fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)",
+                    fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase"
+                  }}>
+                    <span>15 min</span>
+                    <span style={{ color: "var(--ibcs-grid)" }}>·</span>
+                    <span>No card</span>
+                    <span style={{ color: "var(--ibcs-grid)" }}>·</span>
+                    <span>GDPR</span>
+                  </div>
+                </div>
+
+                {/* WHAT YOU GET — 3 cards (inside hero for equal width with Why now) */}
+                <div style={{ padding: "28px 0 0" }}>
+                  <div style={{
+                    fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700,
+                    letterSpacing: 1.5, textTransform: "uppercase", color: "var(--accent)",
+                    marginBottom: 14
+                  }}>What you get</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                    {[
+                      { stat: "7 pillars", desc: "scientific benchmark against 237 European peers", tag: "Peer comparison" },
+                      { stat: "10 actions", desc: "ranked by financial exposure, ready as a business case", tag: "Budget unlock" },
+                      { stat: "5 trends", desc: "the AI and quantum shifts you need to brief on", tag: "IBM · Google · Anthropic" }
+                    ].map((c, i) => (
+                      <div key={i} style={{
+                        background: "#fff",
+                        border: "1px solid var(--border)",
+                        borderRadius: 6,
+                        padding: "16px 16px",
+                        boxShadow: "var(--shadow-sm)",
+                        display: "flex", flexDirection: "column", gap: 8
+                      }}>
+                        <div style={{
+                          fontSize: 20, fontWeight: 800, color: "var(--accent)",
+                          letterSpacing: -0.5, lineHeight: 1
+                        }}>{c.stat}</div>
+                        <div style={{
+                          fontSize: 12.5, color: "var(--text)", lineHeight: 1.4,
+                          flex: 1
+                        }}>{c.desc}</div>
+                        <div style={{
+                          fontSize: 9, color: "var(--text-muted)",
+                          fontFamily: "var(--font-mono)", letterSpacing: 1,
+                          textTransform: "uppercase", fontWeight: 700,
+                          paddingTop: 6, borderTop: "1px solid var(--border-subtle)"
+                        }}>{c.tag}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Explicit divider below WHAT YOU GET */}
+                <div style={{ height: 1, background: "var(--ibcs-ac)", marginTop: 28 }} />
+
+                {/* CTA above sample dashboard */}
+                <div style={{ textAlign: "left", marginTop: 32, marginBottom: 40 }}>
+                  <Btn secondary arrow={false} onClick={onSample}>See sample report</Btn>
+                </div>
+
+                {/* Compact IBCS preview — 7 pillars + spend case side-by-side */}
+                <div style={{ position: "relative", marginTop: 24 }}>
+                <div style={{
+                  position: "absolute", top: -10, left: 16, zIndex: 2,
+                  background: "var(--accent)", color: "#fff", padding: "4px 10px",
+                  fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                  boxShadow: "2px 2px 0 var(--ibcs-ac)",
+                  fontFamily: "var(--font-mono)", textTransform: "uppercase"
+                }}>Benchmark example</div>
+
+                <Card className="ibcs-chart" style={{ padding: 0, border: "1px solid var(--ibcs-ac)", borderRadius: 2, overflow: "hidden", background: "#fff" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+
+                    {/* LEFT — 7 pillars with gap */}
+                    <div style={{ padding: "20px 22px", borderRight: "1px solid var(--ibcs-grid)" }}>
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid var(--ibcs-ac)" }}>
+                        <div>
+                          <div style={{ fontSize: 9, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>Readiness score</div>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 4 }}>
+                            <span className="anim-score" style={{ fontSize: 28, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -1, lineHeight: 1 }}>34</span>
+                            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>/ 100</span>
+                            <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 6 }}>peer avg <b style={{ color: "var(--ibcs-ac)" }}>52</b></span>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div className="anim-red-pulse" style={{ fontSize: 14, fontWeight: 800, color: "var(--ibcs-neg)" }}>▼ −18</div>
+                          <div style={{ fontSize: 10, color: "var(--ibcs-neg)", fontWeight: 600 }}>−35% vs peer</div>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}>
+                        Dimension gap
+                      </div>
+
+                      {[
+                        { label: "Compliance",    ac: 19, bm: 67 },
+                        { label: "Investment",    ac: 22, bm: 58 },
+                        { label: "Readiness",     ac: 28, bm: 54 },
+                        { label: "Security",      ac: 45, bm: 61 },
+                        { label: "Dependencies",  ac: 38, bm: 52 },
+                        { label: "Governance",    ac: 41, bm: 55 },
+                        { label: "Resilience",    ac: 44, bm: 50 }
+                      ].map((d, i) => {
+                        const gap = d.ac - d.bm;
+                        const rowDelay = `${i * 0.08}s`;
+                        return (
+                          <div key={i} style={{ display: "grid", gridTemplateColumns: "78px 1fr 28px 32px", gap: 6, alignItems: "center", padding: "4px 0" }}>
+                            <div style={{ fontSize: 11, color: "var(--ibcs-ac)", fontWeight: 500 }}>{d.label}</div>
+                            <div style={{ position: "relative", height: 10 }}>
+                              <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 1, background: "var(--ibcs-ac)", zIndex: 3 }} />
+                              <div className="anim-gap-bar" style={{ position: "absolute", left: d.ac + "%", top: "50%", transform: "translateY(-50%)", width: Math.abs(gap) + "%", height: 3, background: "var(--ibcs-neg)", zIndex: 2, animationDelay: rowDelay }} />
+                              <div style={{ position: "absolute", left: d.bm + "%", top: -2, bottom: -2, width: 1.5, background: "var(--ibcs-bm)", zIndex: 3 }} />
+                              <div className="anim-bar" style={{ height: "100%", width: d.ac + "%", background: "var(--ibcs-ac)", animationDelay: rowDelay }} />
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ibcs-ac)", textAlign: "right" }}>{d.ac}</div>
+                            <div className="anim-red-pulse" style={{ fontSize: 10, fontWeight: 700, color: "var(--ibcs-neg)", textAlign: "right", animationDelay: rowDelay }}>{gap}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* RIGHT — spend business case */}
+                    <div style={{ padding: "20px 22px" }}>
+                      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid var(--ibcs-ac)" }}>
+                        <div>
+                          <div style={{ fontSize: 9, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>Annual cyber spend</div>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 4 }}>
+                            <span style={{ fontSize: 24, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -0.5, lineHeight: 1 }}>€2.1M</span>
+                            <span style={{ fontSize: 11, color: "var(--text-muted)" }}>plan <b style={{ color: "var(--ibcs-ac)" }}>€5.8M</b></span>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div className="anim-red-pulse" style={{ fontSize: 14, fontWeight: 800, color: "var(--ibcs-neg)" }}>▼ −€3.7M</div>
+                          <div style={{ fontSize: 10, color: "var(--ibcs-neg)", fontWeight: 600 }}>−64% below plan</div>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}>
+                        Business case &middot; € millions
+                      </div>
+
+                      {[
+                        { label: "Your spend",   val: 2.1, type: "ac" },
+                        { label: "Peer average", val: 4.3, type: "bm" },
+                        { label: "Recommended",  val: 5.8, type: "bu" }
+                      ].map((row, i) => {
+                        const w = (row.val / 6.5 * 100);
+                        const rowDelay = `${0.2 + i * 0.12}s`;
+                        return (
+                          <div key={i} style={{ display: "grid", gridTemplateColumns: "90px 1fr 48px", gap: 6, alignItems: "center", padding: "5px 0" }}>
+                            <div style={{ fontSize: 11, color: "var(--ibcs-ac)", fontWeight: 500 }}>{row.label}</div>
+                            <div style={{ position: "relative", height: 14 }}>
+                              <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 1, background: "var(--ibcs-ac)", zIndex: 3 }} />
+                              {row.type === "ac" && (
+                                <div className="anim-bar" style={{ height: "100%", width: w + "%", background: "var(--ibcs-ac)", animationDelay: rowDelay }} />
+                              )}
+                              {row.type === "bm" && (
+                                <div className="anim-bar" style={{ height: "100%", width: w + "%", background: "#fff", border: "1.5px solid var(--ibcs-bm)", boxSizing: "border-box", animationDelay: rowDelay }} />
+                              )}
+                              {row.type === "bu" && (
+                                <div className="ibcs-hatch anim-bar" style={{ height: "100%", width: w + "%", boxSizing: "border-box", animationDelay: rowDelay }} />
+                              )}
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--ibcs-ac)", textAlign: "right" }}>€{row.val.toFixed(1)}M</div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Board ask — pulses to draw eye to the ROI */}
+                      <div className="anim-board-ask" style={{ marginTop: 10, padding: "8px 12px", borderLeft: "3px solid var(--accent)" }}>
+                        <div style={{ fontSize: 9, color: "var(--accent-dark)", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 2 }}>Board ask</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -0.2 }}>
+                          +€3.7M over 18 months &middot; 3.4× ROI
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer strip */}
+                  <div style={{ padding: "10px 22px", background: "var(--bg-surface)", borderTop: "1px solid var(--ibcs-grid)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                      Your numbers, your benchmark. This is what you get.
+                    </div>
+                    <button onClick={onSample} style={{
+                      background: "none", border: "none", color: "var(--accent)",
+                      fontSize: 12, fontWeight: 700, cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 4
+                    }}>
+                      View full sample {"\u2192"}
+                    </button>
+                  </div>
+                </Card>
+              </div>
+              </div>
+
+            </Container>
+          </div>
+
+          {/* TRUST STRIP — customer logos + certifications */}
+          <div style={{ padding: "18px 0", background: "var(--bg-raised)", borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)" }}>
+            <Container maxWidth={860}>
+              {/* Row 1: customer logos */}
+              <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 10, paddingBottom: 10, borderBottom: "1px dashed var(--border)", whiteSpace: "nowrap", overflow: "hidden" }}>
+                <div style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", fontFamily: "var(--font-mono)", flexShrink: 0 }}>
+                  Used by
+                </div>
+                <div style={{ display: "flex", gap: 18, alignItems: "center", marginLeft: "auto" }}>
+                  {[
+                    { name: "Rabobank", style: { fontWeight: 800, letterSpacing: -0.3 } },
+                    { name: "PHILIPS",  style: { fontWeight: 700, letterSpacing: 1.5, fontSize: 12 } },
+                    { name: "ASML",     style: { fontWeight: 800, letterSpacing: 1, fontSize: 13 } },
+                    { name: "ING",      style: { fontWeight: 800, letterSpacing: 0.5, fontSize: 15, fontStyle: "italic" } },
+                    { name: "Shell",    style: { fontWeight: 700, letterSpacing: -0.3 } },
+                    { name: "KPN",      style: { fontWeight: 800, letterSpacing: 1.5, fontSize: 13 } }
+                  ].map((c, i) => (
+                    <span key={i} style={{
+                      fontSize: 13,
+                      color: "#3A3A3A",
+                      opacity: 0.55,
+                      fontFamily: "var(--font-body)",
+                      filter: "grayscale(1)",
+                      lineHeight: 1,
+                      ...c.style
+                    }}>{c.name}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Row 2: certifications — compact pills */}
+              <div style={{ display: "flex", alignItems: "center", gap: 20, whiteSpace: "nowrap", overflow: "hidden" }}>
+                <div style={{ fontSize: 10, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", fontFamily: "var(--font-mono)", flexShrink: 0 }}>
+                  Certified
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: "auto" }}>
+                  {[
+                    "ISO 27001", "ISO 27701", "SOC 2 Type II",
+                    "GDPR Art. 32", "NIS2 aligned", "EU hosted"
+                  ].map((label, i) => (
+                    <div key={i} style={{
+                      padding: "3px 9px",
+                      background: "#fff", border: "1px solid var(--border)", borderRadius: 2,
+                      fontSize: 10, fontFamily: "var(--font-mono)", fontWeight: 700,
+                      color: "var(--ibcs-ac)", letterSpacing: 0.3,
+                      lineHeight: 1.4
+                    }}>{label}</div>
+                  ))}
+                </div>
+              </div>
+            </Container>
+          </div>
+
+          {/* LEAD MAGNET — Threat Outlook Report */}
+          <div style={{ padding: "64px 0", background: "var(--bg)" }}>
+            <Container maxWidth={860}>
+              <Card style={{ padding: 0, overflow: "hidden", border: "1px solid var(--ibcs-ac)", boxShadow: "var(--shadow-lg)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                  {/* LEFT: Report mockup */}
+                  <div style={{
+                    background: "var(--ibcs-ac)", padding: "48px 40px", position: "relative",
+                    display: "flex", alignItems: "center", justifyContent: "center", minHeight: 380
+                  }}>
+                    <div style={{
+                      width: "100%", maxWidth: 260, background: "#fff",
+                      padding: "32px 28px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+                      transform: "rotate(-2deg)", border: "1px solid var(--border)"
+                    }}>
+                      <div style={{ fontSize: 9, color: "var(--accent)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+                        ABOL.ai Threat Intelligence
+                      </div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -0.8, lineHeight: 1.15, marginBottom: 14 }}>
+                        AI &amp; Quantum Threat Outlook 2026
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 20, lineHeight: 1.5 }}>
+                        The annual intelligence briefing for European IT leadership. 48 pages. Q1 2026 edition.
+                      </div>
+                      {/* Mini chart preview */}
+                      <div style={{ padding: "10px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", marginBottom: 14 }}>
+                        {[
+                          { l: "Autonomous AI attacks", pct: 82 },
+                          { l: "Quantum readiness", pct: 18 },
+                          { l: "Supply chain risk", pct: 67 }
+                        ].map((r, i) => (
+                          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 40px 28px", gap: 6, alignItems: "center", padding: "3px 0", fontSize: 10 }}>
+                            <span style={{ color: "var(--text-secondary)" }}>{r.l}</span>
+                            <div style={{ height: 6, background: "var(--bg-surface)" }}>
+                              <div style={{ height: "100%", width: r.pct + "%", background: "var(--ibcs-ac)" }} />
+                            </div>
+                            <span style={{ color: "var(--ibcs-ac)", fontWeight: 700, fontFamily: "var(--font-mono)", textAlign: "right" }}>{r.pct}%</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.5 }}>
+                        287 EU firms surveyed &middot; Q1 2026
+                      </div>
+                    </div>
+
+                    {/* Badge overlay */}
+                    <div style={{
+                      position: "absolute", top: 24, right: 24,
+                      background: "var(--accent)", color: "#fff", padding: "6px 12px",
+                      fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
+                      fontFamily: "var(--font-mono)"
+                    }}>New · 2026</div>
+                  </div>
+
+                  {/* RIGHT: copy + form */}
+                  <div style={{ padding: "48px 40px" }}>
+                    <Label color="var(--coral)">Free intelligence briefing</Label>
+                    <h3 style={{ fontSize: 32, fontWeight: 800, color: "var(--text)", letterSpacing: -1, lineHeight: 1.1, marginBottom: 16 }}>
+                      The 2026 AI &amp; Quantum Threat Outlook
+                    </h3>
+                    <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 20 }}>
+                      48-page annual briefing, based on 287 European firm assessments and
+                      open-source threat intelligence from the first 90 days of 2026.
+                      Written for IT directors. No vendor pitch.
+                    </p>
+
+                    {/* What's inside */}
+                    <div style={{ marginBottom: 24 }}>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>What's inside</div>
+                      {[
+                        "Benchmark averages across 7 dimensions, by sector and size",
+                        "Real attack patterns from autonomous AI agents in the wild",
+                        "Post-quantum migration status of Europe's top 100 firms",
+                        "Board-ready one-pagers for each of the 6 critical gaps"
+                      ].map((t, i) => (
+                        <div key={i} style={{ display: "flex", gap: 8, marginBottom: 7, fontSize: 13, color: "var(--text)", lineHeight: 1.5 }}>
+                          <span style={{ color: "var(--accent)", fontWeight: 800, flexShrink: 0 }}>→</span>
+                          <span>{t}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Email form */}
+                    <form onSubmit={(e) => { e.preventDefault(); alert("Thanks — report will be sent within the hour."); }} style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                      <input
+                        type="email"
+                        required
+                        placeholder="you@company.eu"
+                        style={{
+                          flex: 1, padding: "12px 14px",
+                          background: "#fff", border: "1px solid var(--border)",
+                          borderRadius: 6, color: "var(--text)", fontSize: 14, outline: "none",
+                          fontFamily: "var(--font-body)"
+                        }}
+                      />
+                      <Btn arrow={false} onClick={() => {}}>Send me the PDF</Btn>
+                    </form>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.3 }}>
+                      Sent once &middot; No spam &middot; Unsubscribe with one click
+                    </div>
+                  </div>
+                </div>
+              </Card>
+                          
+            </Container>
+          </div>
+
+          {/* WHY NOW - 3 risk cards */}
+          <div style={{ padding: "80px 0" }}>
+            <Container maxWidth={860}>
+              <div style={{ marginBottom: 48 }}>
+                <Label>Why now</Label>
+                <h2 style={{ fontSize: 36, fontWeight: 800, color: "var(--text)", letterSpacing: -1, lineHeight: 1.15, maxWidth: 760 }}>
+                  Three forces are colliding &mdash; and your organization is in the crosshairs
+                </h2>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                {[
+                  {
+                    num: "01",
+                    title: "AI attacks at machine speed",
+                    desc: "Advanced AI systems now discover and exploit vulnerabilities autonomously, without human supervision. What took an attacker six months now takes six hours. Frontier labs are deliberately holding back models that could automate attacks globally.",
+                    stat: "1000×", statLabel: "faster exploitation"
+                  },
+                  {
+                    num: "02",
+                    title: "Quantum breaks today's encryption",
+                    desc: "Within 24–36 months, quantum computers will crack the cryptography protecting your data, contracts, and secrets. State actors are already harvesting your encrypted traffic today to decrypt it the moment they can.",
+                    stat: "2027 / 2028", statLabel: "migration deadline"
+                  },
+                  {
+                    num: "03",
+                    title: "Boards are personally on the hook",
+                    desc: "Under NIS2, DORA, and the EU AI Act, directors are now personally liable for cyber oversight failures. Fines stack across regulations, and \"we didn't know\" is no longer a valid defense in court.",
+                    stat: "€10M+", statLabel: "personal fines possible"
+                  }
+                ].map((item, i) => (
+                  <Card key={i} hover style={{ padding: 28 }}>
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--accent)", fontWeight: 700, marginBottom: 16 }}>{item.num}</div>
+                    <h3 style={{ fontSize: 19, fontWeight: 700, color: "var(--text)", marginBottom: 10, letterSpacing: -0.3, lineHeight: 1.3 }}>{item.title}</h3>
+                    <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 20 }}>{item.desc}</p>
+                    <div style={{ paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: "var(--accent-dark)", letterSpacing: -0.5 }}>{item.stat}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500, marginTop: 2 }}>{item.statLabel}</div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+                          
+            </Container>
+          </div>
+
+          {/* CASE STUDIES — anonymized results */}
+          <div style={{ padding: "80px 0" }}>
+            <Container maxWidth={860}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 40, gap: 32, flexWrap: "wrap" }}>
+                <div>
+                  <Label>Results from the field</Label>
+                  <h2 style={{ fontSize: 36, fontWeight: 800, color: "var(--text)", letterSpacing: -1, lineHeight: 1.15 }}>
+                    What IT directors unlocked
+                  </h2>
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-muted)", maxWidth: 320, lineHeight: 1.6 }}>
+                  Anonymized, aggregated outcomes from 287 European organizations benchmarked in Q1 2026.
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                {[
+                  {
+                    sector: "Tier-1 Dutch bank",
+                    size: "8,000 FTE · €4.2B revenue",
+                    headline: "€3.7M additional cyber budget approved in one board meeting",
+                    detail: "Used the quantified gap report to reframe the investment ask. Board approved phased 18-month plan. Compliance gap closed ahead of NIS2 audit.",
+                    kpi: "+€3.7M", kpiLabel: "budget approved"
+                  },
+                  {
+                    sector: "German industrial manufacturer",
+                    size: "12,500 FTE · €2.8B revenue",
+                    headline: "Post-quantum migration roadmap signed off 14 months ahead of deadline",
+                    detail: "Dimension scoring revealed crypto inventory blind spots. Roadmap prioritized based on exposure ranking, not vendor pitch. Insurer dropped renewal premium 18%.",
+                    kpi: "−18%", kpiLabel: "insurance premium"
+                  },
+                  {
+                    sector: "Nordic SaaS company",
+                    size: "400 FTE · €180M ARR",
+                    headline: "Passed Big-4 audit without a single cyber finding",
+                    detail: "Monthly benchmark score gave the CISO a live view of posture. Walked into audit with documented improvement over 3 quarters. Cleared the sales block on enterprise deals.",
+                    kpi: "0 findings", kpiLabel: "audit result"
+                  }
+                ].map((c, i) => (
+                  <Card key={i} hover style={{ padding: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    {/* Header strip */}
+                    <div style={{
+                      padding: "14px 20px", borderBottom: "1px solid var(--border-subtle)",
+                      background: "var(--bg-surface)"
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-dark)", letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 3 }}>{c.sector}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{c.size}</div>
+                    </div>
+
+                    {/* Body */}
+                    <div style={{ padding: 22, flex: 1, display: "flex", flexDirection: "column" }}>
+                      <h3 style={{ fontSize: 17, fontWeight: 700, color: "var(--text)", letterSpacing: -0.3, lineHeight: 1.3, marginBottom: 12 }}>
+                        {c.headline}
+                      </h3>
+                      <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 16, flex: 1 }}>
+                        {c.detail}
+                      </p>
+                      <div style={{ paddingTop: 14, borderTop: "1px solid var(--border-subtle)", display: "flex", alignItems: "baseline", gap: 10 }}>
+                        <div style={{ fontSize: 26, fontWeight: 800, color: "var(--accent-dark)", letterSpacing: -0.8, lineHeight: 1 }}>{c.kpi}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>{c.kpiLabel}</div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Disclaimer */}
+              <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: 20, textAlign: "center", letterSpacing: 0.3 }}>
+                Cases anonymized for confidentiality &middot; Results verified by client CFO or audit partner
+              </div>
+                          
+            </Container>
+          </div>
+
+          {/* SOCIAL PROOF */}
+          <div style={{ padding: "56px 0", background: "var(--accent-lighter)", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+            <Container maxWidth={860}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 40, alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 56, fontWeight: 800, color: "var(--accent-dark)", lineHeight: 1, letterSpacing: -2 }}>2,847</div>
+                  <div style={{ fontSize: 12, color: "var(--accent-dark)", fontWeight: 600, marginTop: 6, letterSpacing: 0.5 }}>assessments in 90 days</div>
+                </div>
+                <div>
+                  <p style={{ fontSize: 17, color: "var(--text)", lineHeight: 1.6, fontWeight: 500, marginBottom: 8 }}>
+                    Financial services, healthcare, critical infrastructure and technology companies across 14 EU member states.
+                  </p>
+                  <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                    The average score is <b style={{ color: "var(--coral)" }}>34/100</b> &mdash; firmly "At Risk." The gap between leaders and laggards is widening fast.
+                  </p>
+                </div>
+              </div>
+                          
+            </Container>
+          </div>
+
+          {/* PRICING */}
+          <div style={{ padding: "80px 0" }}>
+            <Container maxWidth={860}>
+              <div style={{ textAlign: "center", marginBottom: 48 }}>
+                <Label>Pricing</Label>
+                <h2 style={{ fontSize: 36, fontWeight: 800, color: "var(--text)", letterSpacing: -1, lineHeight: 1.15 }}>
+                  Free scan. Quantified case. Standing room at the table.
+                </h2>
+                <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 12, maxWidth: 620, margin: "12px auto 0" }}>
+                  Three ways to make the budget case — from a free baseline to a recurring monthly conversation with your IT and security directors.
+                </p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, maxWidth: 1040, margin: "0 auto" }}>
+                {[
+                  { name: "Scan", price: "€0", period: "free", cta: "Start free", desc: "Overall score, rating, and peer benchmark. The opening number for your board conversation.", features: ["Overall exposure score", "Sector rating", "Peer benchmark percentile"] },
+                  { name: "Full report", price: "€425", period: "one-time", cta: "Get report", desc: "40+ page board-ready PDF with complete breakdown, prioritized actions, and quantified investment case.", features: ["Everything in Scan", "Dimension breakdown", "Top 10 critical gaps with euro impact", "Quantified breach-cost exposure", "3-year roadmap with budgets", "Board-ready PDF"], hl: true },
+                  { name: "Advisory", price: "€29,400", period: "per year", cta: "Book intro call", desc: "Monthly working session with your IT and security directors. Re-scored quarterly. Standing line item on the board agenda.", features: ["Everything in Full", "Monthly working meeting (60 min)", "Quarterly re-assessment", "Regulatory change alerts", "Direct analyst access via Slack/email", "Board memo before each cycle"] }
+                ].map((t, i) => (
+                  <Card key={i} style={{
+                    padding: 28, position: "relative",
+                    border: t.hl ? "2px solid var(--accent)" : "1px solid var(--border)",
+                    boxShadow: t.hl ? "var(--shadow-lg)" : "var(--shadow-sm)"
+                  }}>
+                    {t.hl && (
+                      <div style={{
+                        position: "absolute", top: -12, left: 20,
+                        background: "var(--accent)", color: "#fff",
+                        fontSize: 10, fontWeight: 700, padding: "4px 10px",
+                        borderRadius: 12, letterSpacing: 0.5
+                      }}>MOST POPULAR</div>
+                    )}
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>{t.name}</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
+                      <span style={{ fontSize: 40, fontWeight: 800, color: "var(--text)", letterSpacing: -1.5 }}>{t.price}</span>
+                      <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{t.period}</span>
+                    </div>
+                    <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 18, minHeight: 60 }}>{t.desc}</div>
+                    <Btn onClick={onStart} secondary={!t.hl} style={{ width: "100%", justifyContent: "center", marginBottom: 20 }}>{t.cta}</Btn>
+                    <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 16 }}>
+                      {t.features.map((f, j) => (
+                        <div key={j} style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ color: "var(--sage)", fontSize: 13, fontWeight: 700 }}>{"\u2713"}</span>{f}
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+                          
+            </Container>
+          </div>
+
+          {/* FINAL CTA */}
+          <div style={{
+            padding: "72px 0", background: "var(--text)",
+            position: "relative", overflow: "hidden"
+          }}>
+            <div style={{
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: "radial-gradient(ellipse at 80% 50%, rgba(232,101,10,0.25) 0%, transparent 60%)"
+            }} />
+            <Container maxWidth={860}>
+              <div style={{ textAlign: "left", position: "relative", maxWidth: 760 }}>
+                {/* Eyebrow */}
+                <div style={{
+                  fontSize: 11, fontFamily: "var(--font-mono)", fontWeight: 700,
+                  letterSpacing: 2, textTransform: "uppercase",
+                  color: "var(--accent-light)", marginBottom: 18
+                }}>
+                  &mdash; 15 minutes from here
+                </div>
+
+                <h2 style={{
+                  fontSize: 46, fontWeight: 800, color: "#fff",
+                  letterSpacing: -1.8, lineHeight: 1.05, marginBottom: 20
+                }}>
+                  You&rsquo;ve seen the problem.<br />
+                  <span style={{ color: "var(--accent-light)" }}>Now get your number.</span>
+                </h2>
+
+                <p style={{
+                  fontSize: 17, color: "rgba(255,255,255,0.75)",
+                  lineHeight: 1.55, marginBottom: 32, maxWidth: 620
+                }}>
+                  Your next board meeting is on the calendar. Your insurer is asking questions.
+                  Your NIS2 audit window is closing. Walk into all three with your quantified
+                  exposure, your gap to peers, and the investment case your CFO will actually sign off.
+                </p>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+                  <Btn onClick={onStart} style={{
+                    background: "var(--accent)", border: "1px solid var(--accent)",
+                    padding: "16px 28px", fontSize: 15
+                  }}>
+                    Start your free assessment
+                  </Btn>
+                  <div style={{
+                    fontSize: 11, color: "rgba(255,255,255,0.5)",
+                    fontFamily: "var(--font-mono)", letterSpacing: 1, textTransform: "uppercase"
+                  }}>
+                    Free &middot; 15 min &middot; Confidential &middot; No vendor pitch
+                  </div>
+                </div>
+              </div>
+                          
+            </Container>
+          </div>
+
+          {/* FOOTER */}
+          <div style={{ padding: "32px 0", borderTop: "1px solid var(--border-subtle)", background: "var(--bg-raised)" }}>
+            <Container maxWidth={860}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: "var(--text-muted)", flexWrap: "wrap", gap: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 4, background: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800 }}>A</div>
+                  ABOL.ai &middot; AI and Quantum Security Index
+                </div>
+                <div style={{ display: "flex", gap: 24 }}>
+                  <span>Methodology</span>
+                  <span>Privacy</span>
+                  <span>Contact</span>
+                </div>
+              </div>
+                          
+            </Container>
+          </div>
+        </div>
+      );
+    }
+
+    // =====================================================================
+    // START FORM
+    // =====================================================================
+    function StartForm({ onSubmit, onBack }) {
+      const [sector, setSector] = useState("");
+      const [emp, setEmp] = useState("");
+      const [revenue, setRevenue] = useState("");
+      const [countries, setCountries] = useState([]);
+      const [countrySearch, setCountrySearch] = useState("");
+      const [countryOpen, setCountryOpen] = useState(false);
+      const [email, setEmail] = useState("");
+      const [org, setOrg] = useState("");
+      const [jobTitle, setJobTitle] = useState("");
+      const countryRef = useRef(null);
+
+      // Close dropdown on outside click
+      useEffect(() => {
+        const handler = (e) => {
+          if (countryRef.current && !countryRef.current.contains(e.target)) setCountryOpen(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+      }, []);
+
+      const toggleCountry = (code) => {
+        setCountries(prev => prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]);
+      };
+
+      const toggleRegion = (regionCountries) => {
+        const codes = regionCountries.map(c => c.value);
+        const allSelected = codes.every(c => countries.includes(c));
+        if (allSelected) {
+          setCountries(prev => prev.filter(c => !codes.includes(c)));
+        } else {
+          setCountries(prev => [...new Set([...prev, ...codes])]);
+        }
+      };
+
+      const getCountryLabel = (code) => {
+        for (const r of REGIONS) {
+          const found = r.countries.find(c => c.value === code);
+          if (found) return found.label;
+        }
+        return code;
+      };
+
+      const filteredRegions = REGIONS.map(r => ({
+        ...r,
+        countries: r.countries.filter(c =>
+          c.label.toLowerCase().includes(countrySearch.toLowerCase()) ||
+          c.value.toLowerCase().includes(countrySearch.toLowerCase())
+        )
+      })).filter(r => r.countries.length > 0);
+
+      // Progress calculation
+      const totalFields = 7;
+      const filledFields = [sector, emp, revenue, countries.length > 0 ? "x" : "", org, email, jobTitle].filter(Boolean).length;
+      const progress = Math.round((filledFields / totalFields) * 100);
+      const isComplete = !sector || !emp || !revenue || countries.length === 0 || !org || !email || !jobTitle;
+
+      // Helper styles
+      const inp = {
+        width: "100%", padding: "12px 14px",
+        background: "#fff", border: "1px solid var(--border)",
+        borderRadius: 6, color: "var(--text)", fontSize: 14, outline: "none",
+        fontFamily: "var(--font-body)", transition: "all 0.15s",
+        boxShadow: "0 1px 2px rgba(20,17,15,0.03)"
+      };
+
+      const sectionLabel = {
+        display: "flex", alignItems: "center", gap: 8,
+        fontSize: 13, fontWeight: 700, color: "var(--text)",
+        marginBottom: 4
+      };
+
+      const sectionHint = {
+        fontSize: 12, color: "var(--text-muted)", marginBottom: 14,
+        fontWeight: 400, lineHeight: 1.5
+      };
+
+      const numberBadge = (num, done) => ({
+        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontSize: 11, fontWeight: 800,
+        background: done ? "var(--sage)" : "var(--accent-lighter)",
+        color: done ? "#fff" : "var(--accent-dark)",
+        border: done ? "1px solid var(--sage)" : "1px solid var(--accent)"
+      });
+
+      // Tile button style helper (reusable for sector, emp, revenue)
+      const tileStyle = (selected) => ({
+        padding: "14px 14px", textAlign: "left", cursor: "pointer",
+        background: selected ? "var(--accent-lighter)" : "#fff",
+        border: "1px solid " + (selected ? "var(--accent)" : "var(--border)"),
+        borderRadius: 6,
+        color: "var(--text)",
+        transition: "all 0.15s",
+        boxShadow: selected ? "0 2px 8px rgba(232,101,10,0.15)" : "0 1px 2px rgba(20,17,15,0.03)",
+        fontFamily: "var(--font-body)"
+      });
+
+      // Chip button (for job titles, quick regions)
+      const chipStyle = (selected) => ({
+        padding: "7px 14px", fontSize: 13, fontWeight: 600,
+        borderRadius: 20, cursor: "pointer",
+        background: selected ? "var(--accent)" : "#fff",
+        border: "1px solid " + (selected ? "var(--accent)" : "var(--border)"),
+        color: selected ? "#fff" : "var(--text-secondary)",
+        transition: "all 0.15s",
+        fontFamily: "var(--font-body)",
+        boxShadow: selected ? "0 2px 6px rgba(232,101,10,0.25)" : "none"
+      });
+
+      const sectorLabel = SECTORS.find(s => s.value === sector)?.label;
+      const empLabel = EMP_BUCKETS.find(b => b.value === emp)?.label;
+      const revenueOpts = [
+        { value: "under_10m", label: "< €10M", tag: "Micro" },
+        { value: "10m_50m", label: "€10M–50M", tag: "Small" },
+        { value: "50m_100m", label: "€50M–100M", tag: "Mid-Small" },
+        { value: "100m_250m", label: "€100M–250M", tag: "Mid" },
+        { value: "250m_500m", label: "€250M–500M", tag: "Upper-Mid" },
+        { value: "500m_1b", label: "€500M–1B", tag: "Large" },
+        { value: "1b_5b", label: "€1B–5B", tag: "Enterprise" },
+        { value: "5b_20b", label: "€5B–20B", tag: "Global" },
+        { value: "over_20b", label: "€20B+", tag: "Mega-Cap" }
+      ];
+      const revenueLabel = revenueOpts.find(r => r.value === revenue)?.label;
+
+      return (
+        <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
+          {/* Top progress strip */}
+          <div style={{ background: "#fff", borderBottom: "1px solid var(--border-subtle)", position: "sticky", top: 64, zIndex: 50 }}>
+            <Container>
+              <div style={{ padding: "12px 0", display: "flex", alignItems: "center", gap: 16 }}>
+                <button onClick={onBack} style={{
+                  background: "none", border: "none", color: "var(--text-muted)", fontSize: 12,
+                  fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6
+                }}>{"\u2190"} Back</button>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-muted)", fontWeight: 600, letterSpacing: 1 }}>STEP 1 OF 2</span>
+                  <div style={{ flex: 1, height: 4, background: "var(--bg-surface)", borderRadius: 2, overflow: "hidden", maxWidth: 240 }}>
+                    <div style={{ height: "100%", width: progress + "%", background: "var(--accent)", borderRadius: 2, transition: "width 0.3s" }} />
+                  </div>
+                  <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--accent-dark)", fontWeight: 700 }}>{filledFields}/{totalFields}</span>
+                </div>
+              </div>
+            </Container>
+          </div>
+
+          <Container>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 40, padding: "40px 0 80px", alignItems: "start" }}>
+
+              {/* MAIN FORM */}
+              <div className="slide-up">
+                <h1 style={{ fontSize: 36, fontWeight: 800, color: "var(--text)", marginBottom: 10, letterSpacing: -1, lineHeight: 1.1 }}>
+                  Your organization
+                </h1>
+                <p style={{ fontSize: 15, color: "var(--text-secondary)", marginBottom: 36, lineHeight: 1.6, maxWidth: 560 }}>
+                  We calibrate your score to your sector, size, and regulatory footprint. Financial services and critical infrastructure face stricter weighting.
+                </p>
+
+                {/* SECTION 1: Sector */}
+                <Card style={{ marginBottom: 16, padding: 24 }}>
+                  <div style={sectionLabel}>
+                    <span style={numberBadge(1, !!sector)}>{sector ? "\u2713" : "1"}</span>
+                    Which sector are you in?
+                  </div>
+                  <div style={sectionHint}>Used to weight regulatory and industry-specific risk factors.</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                    {SECTORS.map(s => (
+                      <button key={s.value} type="button" onClick={() => setSector(s.value)} style={tileStyle(sector === s.value)}>
+                        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: sector === s.value ? "var(--accent-dark)" : "var(--text)" }}>{s.label}</div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>{s.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* SECTION 2: Size */}
+                <Card style={{ marginBottom: 16, padding: 24 }}>
+                  <div style={sectionLabel}>
+                    <span style={numberBadge(2, !!emp)}>{emp ? "\u2713" : "2"}</span>
+                    How many employees?
+                  </div>
+                  <div style={sectionHint}>Size buckets help us benchmark you against companies of similar scale.</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+                    {EMP_BUCKETS.map(b => (
+                      <button key={b.value} type="button" onClick={() => setEmp(b.value)} style={{
+                        ...tileStyle(emp === b.value),
+                        padding: "12px 8px", textAlign: "center",
+                        fontSize: 13, fontWeight: 600,
+                        color: emp === b.value ? "var(--accent-dark)" : "var(--text-secondary)"
+                      }}>{b.label}</button>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* SECTION 3: Revenue */}
+                <Card style={{ marginBottom: 16, padding: 24 }}>
+                  <div style={sectionLabel}>
+                    <span style={numberBadge(3, !!revenue)}>{revenue ? "\u2713" : "3"}</span>
+                    Annual revenue
+                  </div>
+                  <div style={sectionHint}>A proxy for attack surface and regulatory exposure.</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+                    {revenueOpts.map(r => (
+                      <button key={r.value} type="button" onClick={() => setRevenue(r.value)} style={{
+                        ...tileStyle(revenue === r.value), padding: "10px 10px", textAlign: "center"
+                      }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: revenue === r.value ? "var(--accent-dark)" : "var(--text)" }}>{r.label}</div>
+                        {r.tag && <div style={{ fontSize: 10, marginTop: 3, color: "var(--text-muted)", fontWeight: 500 }}>{r.tag}</div>}
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* SECTION 4: Countries */}
+                <Card style={{ marginBottom: 16, padding: 24, position: "relative", zIndex: countryOpen ? 40 : "auto" }}>
+                  <div style={sectionLabel}>
+                    <span style={numberBadge(4, countries.length > 0)}>{countries.length > 0 ? "\u2713" : "4"}</span>
+                    Operating countries
+                  </div>
+                  <div style={sectionHint}>Select all regions where you process data or deliver services.</div>
+
+                  <div ref={countryRef} style={{ position: "relative" }}>
+                    {/* Selected tags + trigger */}
+                    <div
+                      onClick={() => setCountryOpen(!countryOpen)}
+                      style={{
+                        ...inp, cursor: "pointer", minHeight: 52,
+                        display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center",
+                        padding: "10px 14px",
+                        borderColor: countryOpen ? "var(--accent)" : "var(--border)",
+                        boxShadow: countryOpen ? "0 0 0 3px rgba(232,101,10,0.12)" : inp.boxShadow
+                      }}
+                    >
+                      {countries.length === 0 && (
+                        <span style={{ color: "var(--text-muted)", fontSize: 14 }}>Select countries or regions\u2026</span>
+                      )}
+                      {countries.slice(0, 8).map(code => (
+                        <span key={code} style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          padding: "4px 8px 4px 10px", background: "var(--accent-lighter)",
+                          border: "1px solid var(--accent)", borderRadius: 14,
+                          fontSize: 12, color: "var(--accent-dark)", fontWeight: 600
+                        }}>
+                          {getCountryLabel(code)}
+                          <span
+                            onClick={(e) => { e.stopPropagation(); toggleCountry(code); }}
+                            style={{ cursor: "pointer", opacity: 0.7, fontSize: 14, lineHeight: 1,
+                              width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center",
+                              borderRadius: "50%", background: "rgba(124,45,18,0.15)" }}
+                          >{"\u00D7"}</span>
+                        </span>
+                      ))}
+                      {countries.length > 8 && (
+                        <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>+{countries.length - 8} more</span>
+                      )}
+                      <span style={{ marginLeft: "auto", color: "var(--text-muted)", fontSize: 12, fontWeight: 600 }}>
+                        {countries.length > 0 ? countries.length + " selected" : "Click to select"}
+                      </span>
+                    </div>
+
+                    {/* Dropdown */}
+                    {countryOpen && (
+                      <div style={{
+                        position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50,
+                        marginTop: 6, background: "#fff",
+                        border: "1px solid var(--accent)", borderRadius: 8,
+                        maxHeight: 400, overflow: "hidden", display: "flex", flexDirection: "column",
+                        boxShadow: "0 20px 60px rgba(20,17,15,0.15)"
+                      }}>
+                        <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border-subtle)" }}>
+                          <input
+                            type="text"
+                            value={countrySearch}
+                            onChange={e => setCountrySearch(e.target.value)}
+                            placeholder="Search countries\u2026"
+                            autoFocus
+                            style={{ ...inp, padding: "8px 12px", fontSize: 13, background: "var(--bg-surface)", borderColor: "var(--border)" }}
+                          />
+                        </div>
+
+                        <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--border-subtle)", display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {[
+                            { label: "EU/EEA", codes: ["NL","BE","LU","FR","DE","AT","IT","ES","PT","GR","IE","DK","SE","FI","PL","CZ","SK","HU","RO","BG","HR","SI","EE","LV","LT","MT","CY","IS","NO","LI"] },
+                            { label: "Benelux", codes: ["NL","BE","LU"] },
+                            { label: "DACH", codes: ["DE","AT","CH"] },
+                            { label: "Nordics", codes: ["DK","SE","NO","FI","IS"] },
+                            { label: "G7", codes: ["US","GB","FR","DE","IT","CA","JP"] },
+                            { label: "Five Eyes", codes: ["US","GB","CA","AU","NZ"] }
+                          ].map(g => {
+                            const allIn = g.codes.every(c => countries.includes(c));
+                            return (
+                              <button key={g.label} type="button" onClick={() => {
+                                if (allIn) setCountries(prev => prev.filter(c => !g.codes.includes(c)));
+                                else setCountries(prev => [...new Set([...prev, ...g.codes])]);
+                              }} style={chipStyle(allIn)}>
+                                {allIn ? "\u2713 " : ""}{g.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div style={{ overflowY: "auto", flex: 1, padding: "6px 0" }}>
+                          {filteredRegions.map(r => {
+                            const regionCodes = r.countries.map(c => c.value);
+                            const allRegionSelected = regionCodes.every(c => countries.includes(c));
+                            const someRegionSelected = regionCodes.some(c => countries.includes(c));
+                            return (
+                              <div key={r.region}>
+                                <div
+                                  onClick={() => toggleRegion(r.countries)}
+                                  style={{
+                                    padding: "8px 14px", cursor: "pointer",
+                                    display: "flex", alignItems: "center", gap: 10,
+                                    background: someRegionSelected ? "var(--bg-surface)" : "transparent",
+                                    position: "sticky", top: 0, zIndex: 1,
+                                    borderBottom: "1px solid var(--border-subtle)"
+                                  }}
+                                >
+                                  <div style={{
+                                    width: 16, height: 16, borderRadius: 4,
+                                    border: "1.5px solid " + (allRegionSelected ? "var(--sage)" : someRegionSelected ? "var(--accent)" : "var(--border)"),
+                                    background: allRegionSelected ? "var(--sage)" : "#fff",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 10, color: "#fff", flexShrink: 0, fontWeight: 800
+                                  }}>
+                                    {allRegionSelected ? "\u2713" : someRegionSelected ? "\u2013" : ""}
+                                  </div>
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text)", letterSpacing: 0.5, textTransform: "uppercase" }}>{r.region}</span>
+                                  <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: "auto", fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+                                    {regionCodes.filter(c => countries.includes(c)).length}/{regionCodes.length}
+                                  </span>
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", padding: "10px 14px 14px", gap: 6 }}>
+                                  {r.countries.map(c => {
+                                    const sel = countries.includes(c.value);
+                                    return (
+                                      <button key={c.value} type="button" onClick={() => toggleCountry(c.value)} style={{
+                                        padding: "5px 10px", fontSize: 12, borderRadius: 14, cursor: "pointer",
+                                        background: sel ? "var(--accent-lighter)" : "#fff",
+                                        border: "1px solid " + (sel ? "var(--accent)" : "var(--border)"),
+                                        color: sel ? "var(--accent-dark)" : "var(--text-secondary)",
+                                        fontWeight: sel ? 700 : 500, transition: "all 0.1s",
+                                        fontFamily: "var(--font-body)"
+                                      }}>
+                                        <span style={{ marginRight: 5, fontSize: 10, fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>{c.value}</span>
+                                        {c.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {filteredRegions.length === 0 && (
+                            <div style={{ padding: 24, textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+                              No countries match "{countrySearch}"
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ padding: "10px 14px", borderTop: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--bg-surface)" }}>
+                          <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 600 }}>
+                            {countries.length} countr{countries.length === 1 ? "y" : "ies"} selected
+                          </span>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            {countries.length > 0 && (
+                              <button type="button" onClick={() => setCountries([])} style={{
+                                padding: "6px 12px", fontSize: 11, borderRadius: 14, cursor: "pointer",
+                                background: "#fff", border: "1px solid var(--coral)",
+                                color: "var(--coral)", fontWeight: 600, fontFamily: "var(--font-body)"
+                              }}>Clear all</button>
+                            )}
+                            <button type="button" onClick={() => setCountryOpen(false)} style={{
+                              padding: "6px 14px", fontSize: 11, borderRadius: 14, cursor: "pointer",
+                              background: "var(--accent)", border: "1px solid var(--accent)",
+                              color: "#fff", fontWeight: 700, fontFamily: "var(--font-body)"
+                            }}>Done</button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* SECTION 5: Contact */}
+                <Card style={{ marginBottom: 16, padding: 24 }}>
+                  <div style={sectionLabel}>
+                    <span style={numberBadge(5, !!org)}>{org ? "\u2713" : "5"}</span>
+                    Your organization & contact
+                  </div>
+                  <div style={sectionHint}>We use this to send your report and personalize it. Email is hashed with SHA-256 before storage.</div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 6, letterSpacing: 0.3 }}>Organization <span style={{ color: "var(--coral)" }}>*</span></div>
+                      <input type="text" value={org} onChange={e => setOrg(e.target.value)} placeholder="Company name" style={inp}
+                        onFocus={e => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(232,101,10,0.12)"; }}
+                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = inp.boxShadow; }}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 600, marginBottom: 6, letterSpacing: 0.3 }}>Email <span style={{ color: "var(--coral)" }}>*</span></div>
+                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.eu" style={inp}
+                        onFocus={e => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(232,101,10,0.12)"; }}
+                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = inp.boxShadow; }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "var(--sage)" }}>{"\uD83D\uDD12"}</span>
+                    Email is hashed with SHA-256. Never stored in plaintext.
+                  </div>
+                </Card>
+
+                {/* SECTION 6: Job Title */}
+                <Card style={{ marginBottom: 24, padding: 24 }}>
+                  <div style={sectionLabel}>
+                    <span style={numberBadge(6, !!jobTitle)}>{jobTitle ? "\u2713" : "6"}</span>
+                    What's your role?
+                  </div>
+                  <div style={sectionHint}>Tailors the report language and key findings to your perspective.</div>
+
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                    {[
+                      "CISO", "CTO", "CIO", "CEO", "COO", "DPO",
+                      "IT Director", "Security Manager", "Compliance Officer", "Risk Manager"
+                    ].map(t => (
+                      <button key={t} type="button" onClick={() => setJobTitle(t)} style={chipStyle(jobTitle === t)}>{t}</button>
+                    ))}
+                  </div>
+                  <input
+                    type="text" value={jobTitle}
+                    onChange={e => setJobTitle(e.target.value)}
+                    placeholder="Or type a custom title\u2026"
+                    style={inp}
+                    onFocus={e => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(232,101,10,0.12)"; }}
+                    onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = inp.boxShadow; }}
+                  />
+                </Card>
+
+                {/* Submit */}
+                <Btn
+                  disabled={isComplete}
+                  onClick={() => onSubmit({ sector, emp, revenue, countries, email, org, jobTitle })}
+                  style={{ width: "100%", justifyContent: "center", padding: "18px 24px", fontSize: 15 }}
+                >
+                  Begin assessment &middot; 42 questions
+                </Btn>
+                <div style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)", marginTop: 12 }}>
+                  Takes ~15 minutes &middot; Results delivered instantly
+                </div>
+              </div>
+
+              {/* SIDEBAR — live summary */}
+              <div style={{ position: "sticky", top: 132 }}>
+                <Card style={{ padding: 20, marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-muted)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 14 }}>
+                    Your profile
+                  </div>
+
+                  {filledFields === 0 && (
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.5 }}>
+                      Your selections will appear here as you fill in the form.
+                    </div>
+                  )}
+
+                  {[
+                    { label: "Sector", val: sectorLabel },
+                    { label: "Employees", val: empLabel },
+                    { label: "Revenue", val: revenueLabel },
+                    { label: "Countries", val: countries.length > 0 ? countries.length + " selected" : null },
+                    { label: "Organization", val: org },
+                    { label: "Role", val: jobTitle }
+                  ].map((row, i) => (
+                    <div key={i} style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                      padding: "10px 0", borderBottom: i < 5 ? "1px solid var(--border-subtle)" : "none",
+                      opacity: row.val ? 1 : 0.4
+                    }}>
+                      <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>{row.label}</span>
+                      <span style={{ fontSize: 13, color: "var(--text)", fontWeight: row.val ? 700 : 500, textAlign: "right", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {row.val || "\u2014"}
+                      </span>
+                    </div>
+                  ))}
+                </Card>
+
+                {/* Trust panel */}
+                <Card style={{ padding: 20, background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <span style={{ fontSize: 14 }}>{"\uD83D\uDD12"}</span>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>Confidential by design</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: 12 }}>
+                    Your answers are encrypted end-to-end. We never share individual scores with third parties, and your organization data is anonymized for peer benchmarks.
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.5 }}>
+                    SOC 2 &middot; GDPR compliant &middot; EU hosted
+                  </div>
+                </Card>
+              </div>
+
+            </div>
+          </Container>
+        </div>
+      );
+    }
+
+    // =====================================================================
+    // QUESTIONNAIRE
+    // =====================================================================
+    function Quiz({ questions, sector, onComplete }) {
+      const [idx, setIdx] = useState(0);
+      const [answers, setAnswers] = useState({});
+      const [selected, setSelected] = useState(null);
+      const [finishing, setFinishing] = useState(false);
+
+      const q = questions[idx];
+      const dim = q ? DIM[q.dimension] : null;
+      const isLast = idx === questions.length - 1;
+
+      const submit = () => {
+        if (selected === null) return;
+        const newAnswers = { ...answers, [q.question_id]: selected };
+        setAnswers(newAnswers);
+
+        if (isLast) {
+          setFinishing(true);
+          setTimeout(() => {
+            onComplete(computeResults(newAnswers, sector));
+          }, 1800);
+        } else {
+          setIdx(idx + 1);
+          setSelected(null);
+        }
+      };
+
+      if (finishing) {
+        return (
+          <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ textAlign: "center" }} className="fade-in">
+              <div style={{ fontSize: 48, marginBottom: 16, animation: "pulse 1.5s infinite" }}>{"\u2699\uFE0F"}</div>
+              <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text)", marginBottom: 8, letterSpacing: -0.5 }}>Calculating your exposure...</h2>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                Analyzing {Object.keys(answers).length} responses with sector-weighted risk scoring
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      if (!q) return null;
+
+      return (
+        <div style={{ minHeight: "100vh", padding: "40px 0 60px" }}>
+          <Container maxWidth={640}>
+            {/* Progress */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                  Question {idx + 1} of {questions.length}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                  {Math.round((idx / questions.length) * 100)}%
+                </div>
+              </div>
+              <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
+                <div style={{
+                  height: "100%", width: Math.max((idx / questions.length) * 100, 2) + "%",
+                  background: "var(--accent)",
+                  borderRadius: 2, transition: "width 0.5s ease"
+                }} />
+              </div>
+            </div>
+
+            <div className="slide-up" key={q.question_id}>
+              <Card style={{ padding: 0, overflow: "hidden" }}>
+                {/* Dimension header */}
+                <div style={{
+                  padding: "12px 20px", background: dim.color + "08",
+                  borderBottom: "1px solid " + dim.color + "15",
+                  display: "flex", alignItems: "center", gap: 8
+                }}>
+                  <span style={{ fontSize: 16 }}>{dim.icon}</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, color: dim.color,
+                    letterSpacing: 1.5, textTransform: "uppercase",
+                    fontFamily: "var(--font-mono)"
+                  }}>{dim.label}</span>
+                  {q.is_future_proofing && (
+                    <Badge color="#f59e0b" style={{ marginLeft: "auto", fontSize: 8, padding: "2px 8px" }}>FUTURE-PROOFING</Badge>
+                  )}
+                </div>
+
+                {/* Question */}
+                <div style={{ padding: "24px 20px 16px" }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 600, color: "var(--text)", lineHeight: 1.5, marginBottom: 8 }}>
+                    {q.text}
+                  </h3>
+                  {q.help && (
+                    <p style={{
+                      fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6,
+                      padding: "10px 12px", background: "var(--bg-surface)",
+                      borderRadius: 2, borderLeft: "2px solid " + dim.color + "40"
+                    }}>{q.help}</p>
+                  )}
+                </div>
+
+                {/* Options */}
+                <div style={{ padding: "0 20px 24px" }}>
+                  {q.options.map((opt, i) => {
+                    const isSel = String(selected) === String(opt.value);
+                    return (
+                      <button key={i} onClick={() => setSelected(opt.value)} style={{
+                        display: "block", width: "100%", padding: "12px 16px 12px 40px",
+                        marginBottom: 8, textAlign: "left", cursor: "pointer",
+                        background: isSel ? "linear-gradient(135deg, " + dim.color + "18, " + dim.color + "08)" : "var(--bg-surface)",
+                        border: "1px solid " + (isSel ? dim.color + "60" : "var(--border)"),
+                        borderRadius: 2, color: isSel ? "#f1f5f9" : "#94a3b8",
+                        fontSize: 13, transition: "all 0.15s", position: "relative"
+                      }}>
+                        <div style={{
+                          position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)",
+                          width: 18, height: 18, borderRadius: "50%",
+                          border: "2px solid " + (isSel ? dim.color : "var(--border)"),
+                          background: isSel ? dim.color : "transparent",
+                          display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                          {isSel && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />}
+                        </div>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Footer */}
+                <div style={{
+                  padding: "16px 20px", borderTop: "1px solid var(--border)",
+                  display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                    {Object.keys(answers).length} of {questions.length} answered
+                  </div>
+                  <Btn onClick={submit} disabled={selected === null}>
+                    {isLast ? "Finish & Get Score" : "Next"}
+                  </Btn>
+                </div>
+              </Card>
+            </div>
+          </Container>
+        </div>
+      );
+    }
+
+    // =====================================================================
+    // RESULTS PAGE
+    // =====================================================================
+    function Results({ result, onRestart }) {
+      const rc = RATINGS[result.rating] || RATINGS.Fair;
+      const [show, setShow] = useState(false);
+      useEffect(() => { setTimeout(() => setShow(true), 300); }, []);
+
+      return (
+        <div style={{ minHeight: "100vh", padding: "60px 0" }}>
+          <Container maxWidth={640}>
+            <div className="slide-up">
+              {/* Score hero — professional, clear */}
+              <Card style={{
+                padding: "40px 32px", marginBottom: 16,
+                background: rc.bg, border: "2px solid " + rc.border, borderRadius: 10
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: rc.color, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, fontWeight: 600 }}>
+                      Your exposure level
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                      Sector: <b style={{ color: "var(--text)" }}>{SECTORS.find(s => s.value === result.sector)?.label || result.sector}</b>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: "6px 14px", background: "#fff", border: "1px solid " + rc.color,
+                    borderRadius: 20, fontSize: 12, fontWeight: 700, color: rc.color, letterSpacing: 0.5,
+                    textTransform: "uppercase"
+                  }}>{result.rating}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10 }}>
+                  <div style={{
+                    fontSize: 88, fontWeight: 800, color: rc.color, lineHeight: 1, letterSpacing: -3,
+                    opacity: show ? 1 : 0, transform: show ? "scale(1)" : "scale(0.85)",
+                    transition: "all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                  }}>{result.overall_percentage}</div>
+                  <div style={{ fontSize: 32, fontWeight: 600, color: rc.color, opacity: 0.6 }}>/ 100</div>
+                </div>
+                {result.overall_percentage < 50 && (
+                  <div style={{
+                    marginTop: 20, padding: "12px 16px", background: "#fff",
+                    border: "1px solid var(--coral)", borderRadius: 6,
+                    fontSize: 13, color: "var(--coral)", lineHeight: 1.55, fontWeight: 500
+                  }}>
+                    <b>Action required.</b> Your organization scores below the minimum threshold for regulatory compliance confidence. Immediate action is recommended across multiple dimensions.
+                  </div>
+                )}
+              </Card>
+
+              {/* Rating scale */}
+              <Card style={{ padding: 20, marginBottom: 20 }}>
+                <Label>RATING SCALE</Label>
+                <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
+                  {["Critical", "At Risk", "Fair", "Strong", "Leader"].map(r => {
+                    const c = RATINGS[r];
+                    const active = r === result.rating;
+                    return (
+                      <div key={r} style={{
+                        flex: 1, padding: "8px 4px", textAlign: "center",
+                        background: active ? c.bg : "var(--bg-surface)",
+                        border: "1px solid " + (active ? c.border : "transparent"),
+                        borderRadius: 2
+                      }}>
+                        <div style={{ fontSize: 14, marginBottom: 2 }}>{c.emoji}</div>
+                        <div style={{
+                          fontSize: 8, fontWeight: 600, letterSpacing: 0.5,
+                          color: active ? c.color : "#475569", textTransform: "uppercase"
+                        }}>{r}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{
+                  marginTop: 12, height: 6, borderRadius: 3, position: "relative",
+                  background: "linear-gradient(90deg, #9B2C2C, var(--coral), var(--accent), #7A8B6E, var(--sage))"
+                }}>
+                  <div style={{
+                    position: "absolute",
+                    left: Math.min(result.overall_percentage, 100) + "%",
+                    top: -4, transform: "translateX(-50%)",
+                    width: 14, height: 14, borderRadius: "50%",
+                    background: "#fff", border: "3px solid " + rc.color,
+                    boxShadow: "0 0 10px " + rc.color + "60",
+                    transition: "left 1s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                  }} />
+                </div>
+              </Card>
+
+              {/* Dimension breakdown - VISIBLE in demo */}
+              <Card style={{ padding: 20, marginBottom: 20 }}>
+                <Label color="var(--accent-dark)">Where you're exposed</Label>
+                {Object.entries(result.dimensions).map(([key, pct]) => {
+                  const d = DIM[key];
+                  if (!d) return null;
+                  return (
+                    <div key={key} style={{ marginBottom: 14 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{d.icon} {d.label}</div>
+                        <div style={{ fontSize: 12, color: "var(--text)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>
+                          {pct}%
+                        </div>
+                      </div>
+                      <div style={{ height: 6, background: "var(--border)", borderRadius: 3 }}>
+                        <div style={{
+                          height: "100%", width: pct + "%",
+                          background: d.color, borderRadius: 3,
+                          transition: "width 1s ease"
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </Card>
+
+              {/* Upgrade CTA — framed as risk, not features */}
+              <div style={{
+                padding: "28px 24px", marginBottom: 20,
+                background: "var(--warning-bg)", border: "1px solid var(--warning-border)", borderRadius: 2
+              }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--accent-dark)", marginBottom: 8 }}>
+                  You know your score. Now find out where to act first.
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16, lineHeight: 1.7, fontWeight: 300 }}>
+                  The full report ranks your 10 most critical gaps by financial exposure,
+                  shows exactly where you fall relative to peers in your sector,
+                  and gives you a board-ready action plan with cost estimates.
+                </div>
+                <Btn style={{ padding: "12px 28px" }}>Unlock full report &mdash; {"€"}425</Btn>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                <Btn secondary onClick={onRestart}>Reassess</Btn>
+              </div>
+            </div>
+          </Container>
+        </div>
+      );
+    }
+
+    // =====================================================================
+    // SAMPLE REPORT — board-facing, budget-ask angle
+    // =====================================================================
+    function SampleReport({ onBack, onStart }) {
+      const score = 34;
+      const rc = RATINGS["At Risk"];
+      const currentSpend = 2.1; // in millions
+      const recommendedSpend = 5.8;
+      const peerSpend = 4.3;
+      const exposureCost = 12.4;
+      const budgetGap = recommendedSpend - currentSpend;
+
+      const dims = [
+        { key: "readiness", label: "Readiness", pct: 28, bench: 54, gap: -26 },
+        { key: "security_measures", label: "Security Measures", pct: 45, bench: 61, gap: -16 },
+        { key: "dependencies", label: "Dependencies", pct: 38, bench: 52, gap: -14 },
+        { key: "investment", label: "Investment & Business Case", pct: 22, bench: 58, gap: -36 },
+        { key: "compliance", label: "Compliance", pct: 19, bench: 67, gap: -48 },
+        { key: "governance", label: "Governance", pct: 41, bench: 55, gap: -14 },
+        { key: "resilience", label: "Resilience", pct: 44, bench: 50, gap: -6 }
+      ];
+
+      const criticalGaps = [
+        { area: "Post-quantum migration", exposure: 4.2, status: "No budget allocated", severity: "critical" },
+        { area: "EU AI Act inventory", exposure: 2.8, status: "Deadline August 2026", severity: "critical" },
+        { area: "Continuous vulnerability monitoring", exposure: 2.1, status: "Manual process only", severity: "high" },
+        { area: "Board-level cyber oversight", exposure: 1.6, status: "Annual briefing only", severity: "high" },
+        { area: "AI vendor security reviews", exposure: 1.2, status: "Shadow AI usage detected", severity: "medium" },
+        { area: "Incident response testing", exposure: 0.5, status: "Never formally tested", severity: "medium" }
+      ];
+
+      return (
+        <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+          <Container maxWidth={1040}>
+            <div style={{ padding: "32px 0" }}>
+              <button onClick={onBack} style={{
+                background: "none", border: "none", color: "var(--text-muted)", fontSize: 12, marginBottom: 20,
+                fontFamily: "var(--font-mono)", letterSpacing: 1, cursor: "pointer"
+              }}>{"\u2190"} BACK TO HOMEPAGE</button>
+
+              {/* Watermark */}
+              <div style={{
+                padding: "8px 16px", background: "var(--warning-bg)", border: "1px solid var(--warning-border)",
+                borderRadius: 6, fontSize: 12, color: "var(--accent-dark)", fontWeight: 500, marginBottom: 32,
+                display: "inline-block"
+              }}>
+                <b>SAMPLE REPORT</b> &middot; Anonymized example based on a Tier-1 European bank, 8,000 employees
+              </div>
+
+              {/* Report header */}
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 32, alignItems: "center", marginBottom: 40 }}>
+                <div>
+                  <Label>Executive summary</Label>
+                  <h1 style={{ fontSize: 40, fontWeight: 800, color: "var(--text)", letterSpacing: -1.2, lineHeight: 1.1, marginBottom: 14 }}>
+                    Your cyber investment is <span style={{ color: "var(--coral)" }}>63% below</span> your risk exposure
+                  </h1>
+                  <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: 560 }}>
+                    Based on our assessment, your organization carries a disproportionate cyber risk relative to current investment levels. This report quantifies the gap and provides a board-ready case for additional funding.
+                  </p>
+                </div>
+                <Card style={{ padding: 20, textAlign: "center", background: rc.bg, border: "2px solid " + rc.color }}>
+                  <div style={{ fontSize: 11, color: rc.color, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>Overall score</div>
+                  <div style={{ fontSize: 64, fontWeight: 800, color: rc.color, lineHeight: 1, letterSpacing: -2 }}>{score}</div>
+                  <div style={{ fontSize: 13, color: rc.color, fontWeight: 600, marginTop: 4 }}>/ 100 &middot; At Risk</div>
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid " + rc.color, fontSize: 11, color: "var(--text-secondary)" }}>
+                    Peer avg: <b style={{ color: "var(--text)" }}>52</b> &middot; Leaders: <b style={{ color: "var(--text)" }}>78+</b>
+                  </div>
+                </Card>
+              </div>
+
+              {/* CTA between score and investment gap */}
+              <div style={{ textAlign: "center", padding: "16px 0 28px" }}>
+                <Btn onClick={onStart} style={{ padding: "16px 32px", fontSize: 15 }}>
+                  Start your assessment
+                </Btn>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10 }}>
+                  Free &middot; 15 minutes &middot; Your numbers, your benchmark
+                </div>
+              </div>
+
+              {/* INVESTMENT GAP — IBCS polished */}
+              <Card className="ibcs-chart" style={{
+                padding: 0, marginBottom: 24, overflow: "hidden",
+                border: "1px solid var(--ibcs-ac)", borderRadius: 2, boxShadow: "var(--shadow-lg)"
+              }}>
+                <div style={{ padding: "18px 28px", borderBottom: "2px solid var(--ibcs-ac)" }}>
+                  <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 1, textTransform: "uppercase", fontWeight: 600, marginBottom: 6 }}>
+                    Annual cyber spend &middot; FY2026 &middot; € millions
+                  </div>
+                  <h3 style={{ fontSize: 21, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -0.4, lineHeight: 1.25 }}>
+                    Actual spend −€3.7M below plan (−64%) and −€2.2M below peers (−51%)
+                  </h3>
+                </div>
+
+                {/* KPI tiles — larger, bolder */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1.2fr", borderBottom: "2px solid var(--ibcs-ac)" }}>
+                  {[
+                    { l: "Your spend", v: "€2.1M", meta: "6.2% of IT budget", type: "ac" },
+                    { l: "Peer average", v: "€4.3M", meta: "12.8% of IT", type: "bm" },
+                    { l: "Recommended", v: "€5.8M", meta: "16.4% of IT", type: "bu" },
+                    { l: "Gap to plan", v: "−€3.7M", meta: "−64% below plan", type: "neg" }
+                  ].map((s, i) => (
+                    <div key={i} style={{ padding: "20px 22px", borderRight: i < 3 ? "1px solid var(--ibcs-grid)" : "none", background: s.type === "neg" ? "rgba(153,27,27,0.04)" : "transparent" }}>
+                      <div style={{ fontSize: 11, color: s.type === "neg" ? "var(--ibcs-neg)" : "var(--text-muted)", fontWeight: 600, letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 10 }}>{s.l}</div>
+                      <div style={{ fontSize: 32, fontWeight: 800, color: s.type === "neg" ? "var(--ibcs-neg)" : "var(--ibcs-ac)", letterSpacing: -1.2, lineHeight: 1 }}>{s.v}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 8 }}>{s.meta}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Needed monthly spend — highlight */}
+                <div style={{ padding: "16px 28px", background: "var(--accent-lighter)", borderBottom: "2px solid var(--ibcs-ac)", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--accent-dark)", fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 6 }}>Monthly spend today</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -0.5 }}>€175K<span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", marginLeft: 4 }}>/ month</span></div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--accent-dark)", fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 6 }}>Needed monthly spend</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "var(--accent-dark)", letterSpacing: -0.5 }}>€483K<span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", marginLeft: 4 }}>/ month</span></div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--accent-dark)", fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase", marginBottom: 6 }}>Additional investment needed</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "var(--ibcs-neg)", letterSpacing: -0.5 }}>+€308K<span style={{ fontSize: 12, fontWeight: 500, color: "var(--text-muted)", marginLeft: 4 }}>/ month</span></div>
+                  </div>
+                </div>
+
+                <div style={{ padding: "20px 28px 24px" }}>
+                  <div style={{ fontSize: 12, color: "var(--ibcs-ac)", fontWeight: 700, marginBottom: 4 }}>
+                    Spend comparison
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 10 }}>
+                    Annual, in € millions
+                  </div>
+
+                  {/* Column headers */}
+                  <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 66px 60px", gap: 12, paddingBottom: 6, borderBottom: "1px solid var(--ibcs-ac)", fontSize: 10, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase" }}>
+                    <div></div>
+                    <div></div>
+                    <div style={{ textAlign: "right" }}>Amount</div>
+                    <div style={{ textAlign: "right" }}>% of IT</div>
+                  </div>
+
+                  {[
+                    { sub: "Your spend", val: currentSpend, pct: "6.2%", type: "ac" },
+                    { sub: "Peer average", val: peerSpend, pct: "12.8%", type: "bm" },
+                    { sub: "Recommended plan", val: recommendedSpend, pct: "16.4%", type: "bu" }
+                  ].map((row, i) => {
+                    const w = (row.val / 6.5 * 100);
+                    return (
+                      <div key={i} className="ibcs-row" style={{ display: "grid", gridTemplateColumns: "200px 1fr 66px 60px", gap: 12, alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--ibcs-grid)" }}>
+                        <div style={{ fontSize: 13, color: "var(--ibcs-ac)", fontWeight: 500 }}>{row.sub}</div>
+                        <div style={{ position: "relative", height: 26 }}>
+                          <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 1.5, background: "var(--ibcs-ac)", zIndex: 3 }} />
+                          {row.type === "ac" && (
+                            <div style={{ height: "100%", width: w + "%", background: "var(--ibcs-ac)" }} />
+                          )}
+                          {row.type === "bm" && (
+                            <div style={{ height: "100%", width: w + "%", background: "#fff", border: "1.5px solid var(--ibcs-bm)", boxSizing: "border-box" }} />
+                          )}
+                          {row.type === "bu" && (
+                            <div className="ibcs-hatch" style={{ height: "100%", width: w + "%", boxSizing: "border-box" }} />
+                          )}
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--ibcs-ac)", textAlign: "right" }}>€{row.val.toFixed(1)}M</div>
+                        <div style={{ fontSize: 11, fontWeight: 500, color: "var(--text-muted)", textAlign: "right", fontFamily: "var(--font-mono)" }}>{row.pct}</div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Variance rows — integrated floating bars */}
+                  {[
+                    { label: "Gap to recommended plan", val: -3.7, pct: "-64%", start: 2.1 },
+                    { label: "Gap to peer average", val: -2.2, pct: "-51%", start: 2.1 }
+                  ].map((v, i) => (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "200px 1fr 66px 60px", gap: 12, alignItems: "center", padding: "10px 0", borderBottom: i === 0 ? "1px solid var(--ibcs-grid)" : "none", borderTop: i === 0 ? "2px solid var(--ibcs-ac)" : "none" }}>
+                      <div style={{ fontSize: 13, color: "var(--ibcs-neg)", fontWeight: 600 }}>{v.label}</div>
+                      <div style={{ position: "relative", height: 18 }}>
+                        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 1.5, background: "var(--ibcs-ac)", zIndex: 3 }} />
+                        <div style={{
+                          position: "absolute",
+                          left: (v.start / 6.5 * 100) + "%",
+                          width: (Math.abs(v.val) / 6.5 * 100) + "%",
+                          top: 0, bottom: 0,
+                          background: "var(--ibcs-neg)"
+                        }} />
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 3, fontSize: 14, fontWeight: 700, color: "var(--ibcs-neg)" }}>
+                        <span style={{ fontSize: 9 }}>▼</span>
+                        <span>−€{Math.abs(v.val).toFixed(1)}M</span>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--ibcs-neg)", textAlign: "right", fontFamily: "var(--font-mono)" }}>{v.pct}</div>
+                    </div>
+                  ))}
+
+                  {/* Axis */}
+                  <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 66px 60px", gap: 12, marginTop: 6 }}>
+                    <div></div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--text-muted)" }}>
+                      <span>€0</span><span>€1.6M</span><span>€3.3M</span><span>€4.9M</span><span>€6.5M</span>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div style={{ display: "flex", gap: 20, marginTop: 16, fontSize: 11, color: "var(--text-secondary)", flexWrap: "wrap", alignItems: "center" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ display: "inline-block", width: 18, height: 10, background: "var(--ibcs-ac)" }} />Your spend
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ display: "inline-block", width: 18, height: 10, background: "#fff", border: "1.5px solid var(--ibcs-bm)" }} />Peer average
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span className="ibcs-hatch" style={{ display: "inline-block", width: 18, height: 10 }} />Recommended
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ display: "inline-block", width: 18, height: 10, background: "var(--ibcs-neg)" }} />Gap
+                    </span>
+                  </div>
+
+                  {/* Recommendation block */}
+                  <div style={{ marginTop: 20, padding: "16px 20px", background: "var(--bg-surface)", borderLeft: "4px solid var(--ibcs-ac)" }}>
+                    <div style={{ fontSize: 10, color: "var(--ibcs-ac)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, fontFamily: "var(--font-mono)" }}>Recommendation</div>
+                    <div style={{ fontSize: 19, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -0.3, marginBottom: 6, lineHeight: 1.3 }}>
+                      Request additional €{budgetGap.toFixed(1)}M over 18 months to close gap to plan
+                    </div>
+                    <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                      Phased deployment: €2.1M Year 1 &middot; €1.6M Year 2. Addresses 3 critical gaps driving €{exposureCost}M in annual loss expectancy. Expected ROI 3.4× &middot; payback under 7 months.
+                    </div>
+                  </div>
+                </div>
+
+              </Card>
+
+              {/* EXPOSURE CALCULATION */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+                <Card style={{ padding: 24 }}>
+                  <Label color="var(--coral)">Financial exposure</Label>
+                  <div style={{ fontSize: 48, fontWeight: 800, color: "var(--coral)", letterSpacing: -1.5, lineHeight: 1, marginBottom: 8 }}>€{exposureCost}M</div>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                    Estimated annualized loss expectancy based on your industry, size, and current control gaps. Includes breach costs, regulatory fines, and business interruption.
+                  </div>
+                  <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border-subtle)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.5 }}>BREACH COST</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>€6.4M</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.5 }}>REG. FINES</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>€4.1M</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.5 }}>DOWNTIME</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>€1.2M</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.5 }}>REPUTATION</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>€0.7M</div>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card style={{ padding: 24 }}>
+                  <Label color="var(--sage)">Return on proposed investment</Label>
+                  <div style={{ fontSize: 48, fontWeight: 800, color: "var(--sage)", letterSpacing: -1.5, lineHeight: 1, marginBottom: 8 }}>3.4×</div>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                    For every €1 invested in closing the gap, you reduce €3.40 in expected annual loss. Payback period under 7 months.
+                  </div>
+                  <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 8 }}>Risk reduction breakdown</div>
+                    {[
+                      { label: "Compliance fines avoided", val: "€3.2M" },
+                      { label: "Breach probability \u2193 60%", val: "€3.8M" },
+                      { label: "Insurance premium reduction", val: "€0.4M" }
+                    ].map((r, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-secondary)", marginBottom: 4 }}>
+                        <span>{r.label}</span>
+                        <b style={{ color: "var(--sage)" }}>{r.val}</b>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+
+              {/* CTA between exposure/ROI and dimension breakdown */}
+              <div style={{ textAlign: "center", padding: "16px 0 28px" }}>
+                <Btn onClick={onStart} style={{ padding: "16px 32px", fontSize: 15 }}>
+                  Start your assessment
+                </Btn>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 10 }}>
+                  Free &middot; 15 minutes &middot; Your numbers, your benchmark
+                </div>
+              </div>
+
+              {/* DIMENSION BREAKDOWN */}
+              <Card className="ibcs-chart" style={{ padding: 0, marginBottom: 24, border: "1px solid var(--ibcs-ac)", borderRadius: 2 }}>
+                <div style={{ padding: "18px 28px", borderBottom: "2px solid var(--ibcs-ac)" }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", letterSpacing: 0.3, fontWeight: 600, marginBottom: 6, textTransform: "uppercase" }}>
+                    Dimension scores &middot; Q1 2026 &middot; Index points
+                  </div>
+                  <h3 style={{ fontSize: 19, fontWeight: 800, color: "var(--ibcs-ac)", letterSpacing: -0.3, lineHeight: 1.3 }}>
+                    All 7 dimensions below peer benchmark &middot; Compliance gap −48 points (−72%) most critical
+                  </h3>
+                </div>
+                <div style={{ padding: "20px 28px 24px" }}>
+                  {/* Column headers */}
+                  <div style={{ display: "grid", gridTemplateColumns: "170px 1fr 60px 60px 52px 52px", gap: 10, paddingBottom: 6, borderBottom: "1px solid var(--ibcs-ac)", marginBottom: 6, fontSize: 10, color: "var(--text-muted)", fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase" }}>
+                    <div>Dimension</div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                    </div>
+                    <div style={{ textAlign: "right" }}>Your score</div>
+                    <div style={{ textAlign: "right" }}>Peer avg</div>
+                    <div style={{ textAlign: "right" }}>Gap</div>
+                    <div style={{ textAlign: "right" }}>Gap %</div>
+                  </div>
+
+                  {[...dims].sort((a, b) => (a.pct - a.bench) - (b.pct - b.bench)).map((d, i) => {
+                    const deltaAbs = d.pct - d.bench;
+                    const deltaRel = Math.round((deltaAbs / d.bench) * 100);
+                    const negColor = deltaAbs < 0 ? "var(--ibcs-neg)" : "var(--ibcs-pos)";
+                    return (
+                      <div key={d.key} className="ibcs-row" style={{ display: "grid", gridTemplateColumns: "170px 1fr 60px 60px 52px 52px", gap: 10, alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--ibcs-grid)" }}>
+                        <div style={{ fontSize: 13, color: "var(--ibcs-ac)", fontWeight: 500 }}>{d.label}</div>
+                        <div style={{ position: "relative", height: 22 }}>
+                          {/* Zero axis */}
+                          <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 1.5, background: "var(--ibcs-ac)", zIndex: 4 }} />
+                          {/* Gridlines */}
+                          {[25, 50, 75].map(g => (
+                            <div key={g} style={{ position: "absolute", left: g + "%", top: 0, bottom: 0, width: 1, background: "var(--ibcs-grid)", zIndex: 1 }} />
+                          ))}
+                          {/* Integrated variance bar — red segment from AC to BM */}
+                          {deltaAbs < 0 && (
+                            <div style={{
+                              position: "absolute", left: d.pct + "%", top: "50%", transform: "translateY(-50%)",
+                              width: Math.abs(deltaAbs) + "%", height: 5,
+                              background: "var(--ibcs-neg)", zIndex: 2
+                            }} />
+                          )}
+                          {/* BM reference marker */}
+                          <div style={{ position: "absolute", left: d.bench + "%", top: -3, bottom: -3, width: 2, background: "var(--ibcs-bm)", zIndex: 3 }} />
+                          {/* AC bar — solid dark */}
+                          <div style={{ height: "100%", width: d.pct + "%", background: "var(--ibcs-ac)" }} />
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ibcs-ac)", textAlign: "right" }}>{d.pct}</div>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: "var(--ibcs-bm)", textAlign: "right" }}>{d.bench}</div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2, fontSize: 13, fontWeight: 700, color: negColor }}>
+                          {deltaAbs !== 0 && <span style={{ fontSize: 9 }}>{deltaAbs < 0 ? "▼" : "▲"}</span>}
+                          <span>{deltaAbs > 0 ? "+" : "−"}{Math.abs(deltaAbs)}</span>
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: negColor, textAlign: "right" }}>
+                          {deltaAbs > 0 ? "+" : "−"}{Math.abs(deltaRel)}%
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Legend */}
+                  <div style={{ display: "flex", gap: 20, marginTop: 14, fontSize: 11, color: "var(--text-secondary)", alignItems: "center" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ display: "inline-block", width: 16, height: 10, background: "var(--ibcs-ac)" }} />
+                      Your score
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ display: "inline-block", width: 2, height: 12, background: "var(--ibcs-bm)" }} />
+                      Peer average
+                    </span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ display: "inline-block", width: 16, height: 4, background: "var(--ibcs-neg)" }} />
+                      Gap
+                    </span>
+                  </div>
+                </div>
+              </Card>
+
+              {/* CRITICAL GAPS — prioritized action list */}
+              <Card style={{ padding: 28, marginBottom: 24 }}>
+                <Label color="var(--coral)">Top 6 critical gaps driving exposure</Label>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 20, letterSpacing: -0.4 }}>Prioritized by financial impact</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 200px 120px", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)", fontSize: 10, color: "var(--text-muted)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>
+                  <div>#</div>
+                  <div>Risk area</div>
+                  <div>Current status</div>
+                  <div style={{ textAlign: "right" }}>Exposure</div>
+                </div>
+                {criticalGaps.map((g, i) => (
+                  <div key={i} style={{
+                    display: "grid", gridTemplateColumns: "40px 1fr 200px 120px", gap: 12,
+                    padding: "16px 0", borderBottom: "1px solid var(--border-subtle)", alignItems: "center"
+                  }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 4,
+                      background: g.severity === "critical" ? "var(--coral-dim)" : g.severity === "high" ? "var(--accent-lighter)" : "var(--bg-surface)",
+                      color: g.severity === "critical" ? "var(--coral)" : g.severity === "high" ? "var(--accent-dark)" : "var(--text-muted)",
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800
+                    }}>{i + 1}</div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 2 }}>{g.area}</div>
+                      <div style={{ fontSize: 11, color: g.severity === "critical" ? "var(--coral)" : "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{g.severity}</div>
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{g.status}</div>
+                    <div style={{ textAlign: "right", fontSize: 16, fontWeight: 800, color: "var(--coral)", fontFamily: "var(--font-mono)" }}>€{g.exposure}M</div>
+                  </div>
+                ))}
+              </Card>
+
+              {/* BOARD ONE-LINER */}
+              <Card style={{
+                padding: 32, marginBottom: 24,
+                background: "var(--text)", border: "none", color: "#fff"
+              }}>
+                <Label color="var(--accent-light)">Board-ready summary</Label>
+                <p style={{ fontSize: 22, fontWeight: 700, color: "#fff", lineHeight: 1.35, letterSpacing: -0.5, marginBottom: 16 }}>
+                  "Our current €2.1M cyber investment addresses only 37% of a €{exposureCost}M annual risk exposure. An additional €{budgetGap.toFixed(1)}M phased over 18 months brings us to peer parity and delivers 3.4\u00d7 return in avoided losses."
+                </p>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontFamily: "var(--font-mono)", letterSpacing: 1 }}>
+                  &mdash; One paragraph for your next board meeting
+                </div>
+              </Card>
+
+              {/* CTA */}
+              <div style={{ textAlign: "center", padding: "48px 0 32px" }}>
+                <h3 style={{ fontSize: 28, fontWeight: 800, color: "var(--text)", letterSpacing: -0.8, marginBottom: 12 }}>
+                  Get your own report in 15 minutes
+                </h3>
+                <p style={{ fontSize: 15, color: "var(--text-secondary)", marginBottom: 24, maxWidth: 480, margin: "0 auto 24px" }}>
+                  Same format, your actual numbers. Walk into your next board meeting with a quantified case for investment.
+                </p>
+                <Btn onClick={onStart}>Start your assessment</Btn>
+              </div>
+            </div>
+          </Container>
+        </div>
+      );
+    }
+
+    // =====================================================================
+    // APP
+    // =====================================================================
+    function App() {
+      const [page, setPage] = useState("landing");
+      const [formData, setFormData] = useState(null);
+      const [result, setResult] = useState(null);
+      const [mode, setMode] = useState("demo"); // "demo" or "live"
+
+      const handleFormSubmit = (data) => {
+        setFormData(data);
+        setPage("quiz");
+      };
+
+      const handleComplete = (res) => {
+        setResult(res);
+        setPage("results");
+      };
+
+      const restart = () => {
+        setFormData(null);
+        setResult(null);
+        setPage("landing");
+      };
+
+      return (
+        <div>
+          <NavBar
+            onLogo={restart}
+            mode={mode}
+            onStart={page === "landing" || page === "sample" ? () => setPage("form") : null}
+            onSample={page === "landing" ? () => setPage("sample") : null}
+          />
+          {page === "landing" && <Landing onStart={() => setPage("form")} onSample={() => setPage("sample")} />}
+          {page === "sample" && <SampleReport onBack={() => setPage("landing")} onStart={() => setPage("form")} />}
+          {page === "form" && <StartForm onSubmit={handleFormSubmit} onBack={() => setPage("landing")} />}
+          {page === "quiz" && formData && (
+            <Quiz questions={DEMO_QUESTIONS} sector={formData.sector} onComplete={handleComplete} />
+          )}
+          {page === "results" && result && <Results result={result} onRestart={restart} />}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
