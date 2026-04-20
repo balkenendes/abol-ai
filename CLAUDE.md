@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ABOL.ai is the **AI & Quantum Security Index** — a freemium cyber readiness benchmark for European organizations. The product positions itself as a tool that gives IT/security directors a quantified case for cyber budget. Three tiers: free Scan (€0), Full Report (€425, 40+ page PDF), monthly Advisory (€2,450 — recurring meeting with IT/security directors).
+ABOL.ai is the **AI & Quantum Security Index** — a freemium cyber readiness benchmark for European organizations. The product positions itself as a tool that gives IT/security directors a quantified case for cyber budget. Three tiers: free Scan (€0), Full Report (€425, 40+ page PDF), annual Advisory (€6,845 — recurring monthly meeting with IT/security directors).
 
 ## Stack
 
@@ -174,7 +174,7 @@ Branch questions have `is_core=false`, a `parent_question_id`, and a `branch_con
 |---|---|---|
 | Scan | €0 | Headline score + rating + peer benchmark percentile |
 | Full report | €425 one-time | 40+ page board-ready PDF, top-10 actions with euro impact, 3-year roadmap |
-| Advisory | €29,400 / year | Recurring monthly meeting with IT/security directors + everything in Full |
+| Advisory | €6,845 / year | Recurring monthly meeting with IT/security directors + everything in Full |
 
 If the pricing in `app.html` (search for the `Scan` / `Full report` / `Advisory` array) drifts from this table, update both.
 
