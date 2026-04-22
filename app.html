@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ABOL.ai — AI and Quantum Security Index</title>
+  <!-- Plausible analytics (privacy-first, EU-hosted, no cookies) -->
+  <script defer data-domain="abol.ai" src="https://plausible.io/js/script.outbound-links.js"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) };</script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cpath d='M17 2L30 9.5V24.5L17 32L4 24.5V9.5Z' fill='%23E8650A'/%3E%3Cpath d='M8 27L15 7H19L26 27H22L20.4 22.3H13.6L12 27ZM14.8 19L17 12.8L19.2 19Z' fill='white' fill-rule='evenodd'/%3E%3C/svg%3E" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -1775,9 +1778,9 @@
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, maxWidth: 1040, margin: "0 auto" }}>
                 {[
-                  { name: "Scan", price: "€0", period: "free", cta: "Start free", desc: "Overall score, rating, and peer benchmark. The opening number for your board conversation.", features: ["Overall exposure score", "Sector rating", "Peer benchmark percentile"] },
-                  { name: "Full report", price: "€425", period: "one-time", cta: "Get report", desc: "40+ page board-ready PDF with complete breakdown, prioritized actions, and quantified investment case.", features: ["Everything in Scan", "Dimension breakdown", "Top 10 critical gaps with euro impact", "Quantified breach-cost exposure", "3-year roadmap with budgets", "Board-ready PDF"], hl: true },
-                  { name: "Advisory", price: "€6,845", period: "per year", cta: "Book intro call", desc: "Monthly working session with your IT and security directors. Re-scored quarterly. Standing line item on the board agenda.", features: ["Everything in Full", "Monthly working meeting (60 min)", "Quarterly re-assessment", "Regulatory change alerts", "Direct analyst access via Slack/email", "Board memo before each cycle"] }
+                  { name: "Scan", price: "€0", period: "free", cta: "Start free", subCta: "9 min, no login", desc: "Overall score, rating, and peer benchmark. The opening number for your board conversation.", features: ["Overall exposure score", "Sector rating", "Peer benchmark percentile"], action: "scan" },
+                  { name: "Full report", price: "€425", period: "one-time", cta: "Start scan → unlock report", subCta: "Scan first, pay after", desc: "40+ page board-ready PDF with complete breakdown, prioritized actions, and quantified investment case.", features: ["Everything in Scan", "Dimension breakdown", "Top 10 critical gaps with euro impact", "Quantified breach-cost exposure", "3-year roadmap with budgets", "Board-ready PDF"], hl: true, action: "scan" },
+                  { name: "Advisory", price: "€6,845", period: "per year", cta: "Book intro call", subCta: "hello@abol.ai", desc: "Monthly working session with your IT and security directors. Re-scored quarterly. Standing line item on the board agenda.", features: ["Everything in Full", "Monthly working meeting (60 min)", "Quarterly re-assessment", "Regulatory change alerts", "Direct analyst access via Slack/email", "Board memo before each cycle"], action: "email" }
                 ].map((t, i) => (
                   <Card key={i} style={{
                     padding: 28, position: "relative",
@@ -1798,7 +1801,26 @@
                       <span style={{ fontSize: 13, color: "var(--text-muted)" }}>{t.period}</span>
                     </div>
                     <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 18, minHeight: 60 }}>{t.desc}</div>
-                    <Btn onClick={onStart} secondary={!t.hl} style={{ width: "100%", justifyContent: "center", marginBottom: 20 }}>{t.cta}</Btn>
+                    <Btn
+                      onClick={() => {
+                        if (t.action === "email") {
+                          if (window.plausible) window.plausible("Advisory intro click");
+                          window.location.href = "mailto:hello@abol.ai?subject=ABOL.ai Advisory — intro call&body=Hi Sam,%0D%0A%0D%0AI'd like to book an intro call for the ABOL.ai Advisory tier.%0D%0A%0D%0AOur organization:%0D%0ASector:%0D%0ASize:%0D%0AFocus for the first meeting:%0D%0A%0D%0AThanks.";
+                          return;
+                        }
+                        if (window.plausible) window.plausible("Pricing CTA click", { props: { tier: t.name } });
+                        onStart();
+                      }}
+                      secondary={!t.hl}
+                      style={{ width: "100%", justifyContent: "center", marginBottom: t.subCta ? 6 : 20 }}
+                    >
+                      {t.cta}
+                    </Btn>
+                    {t.subCta && (
+                      <div style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center", marginBottom: 14, fontFamily: "var(--font-mono)" }}>
+                        {t.subCta}
+                      </div>
+                    )}
                     <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 16 }}>
                       {t.features.map((f, j) => (
                         <div key={j} style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
@@ -2752,21 +2774,29 @@
                 <Btn
                   style={{ padding: "12px 28px" }}
                   onClick={async () => {
+                    if (window.plausible) window.plausible("Unlock click", { props: { sector: result.sector, rating: result.rating } });
                     try {
                       const params = new URLSearchParams({ uuid: assessmentId });
                       if (result.email) params.set("email", result.email);
                       const resp = await fetch(`${API_BASE}/checkout?${params.toString()}`, {
                         method: "POST",
                       });
+                      if (resp.status === 503) {
+                        if (window.plausible) window.plausible("Unlock waitlist (service down)");
+                        window.location.href = "mailto:hello@abol.ai?subject=Full report — assessment " + assessmentId.slice(0,8) + "&body=" + encodeURIComponent("Hi Sam,\n\nI'd like the full report for assessment " + assessmentId + ". Please send when the purchase flow is live.\n\nScore: " + result.overall_percentage + "% (" + result.rating + ")\n\nThanks.");
+                        return;
+                      }
                       if (!resp.ok) {
                         const err = await resp.json().catch(() => ({}));
-                        alert(err.detail || `Checkout failed (HTTP ${resp.status})`);
+                        alert(err.detail || `Checkout failed (HTTP ${resp.status}). Email hello@abol.ai for manual fulfilment.`);
                         return;
                       }
                       const { url } = await resp.json();
                       window.location.href = url;
                     } catch (e) {
-                      alert("Checkout service unreachable. Please try again in a minute.");
+                      if (window.plausible) window.plausible("Unlock waitlist (network)");
+                      // Fly not reachable — fall back to email so buyer intent isn't lost
+                      window.location.href = "mailto:hello@abol.ai?subject=Full report — assessment " + assessmentId.slice(0,8) + "&body=" + encodeURIComponent("Hi Sam,\n\nI'd like the full report for assessment " + assessmentId + ". The purchase flow wasn't reachable — please send the report manually or tell me when it's live.\n\nScore: " + result.overall_percentage + "% (" + result.rating + ")\n\nThanks.");
                       console.error("checkout error:", e);
                     }
                   }}
