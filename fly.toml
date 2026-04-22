@@ -1,0 +1,50 @@
+# fly.toml — ABOL.ai PDF generator service
+# ==========================================
+# Minimal Fly.io config for the abol-pdf container.
+# Region: ams (Amsterdam) — EU data residency, aligns with NIS2/DORA positioning.
+# Concurrency: 1 — ReportLab is not thread-safe; also keeps cost flat.
+# Auto-stop: true — spins down after 5min idle, cold-start ~2s on first PDF.
+#
+# Deploy:
+#   flyctl launch --no-deploy      # once, to claim the app name
+#   flyctl secrets set SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... ANTHROPIC_API_KEY=...
+#   flyctl deploy
+#
+# Logs:    flyctl logs -a abol-pdf
+# Status:  flyctl status -a abol-pdf
+# Shell:   flyctl ssh console -a abol-pdf
+
+app = "abol-pdf"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  ABOL_LOG_LEVEL = "INFO"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 5
+    soft_limit = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout  = "5s"
+    grace_period = "10s"
+    method = "get"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

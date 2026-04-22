@@ -1,0 +1,41 @@
+# Build artifacts + local state that don't belong in the container image.
+# Keeps the image small and avoids secret leakage.
+
+.git/
+.github/
+.vercel/
+.fly/
+.claude/
+.env
+.env.*
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+node_modules/
+reports/
+tmp/
+tests/
+supabase/.temp/
+supabase/.branches/
+
+# Frontend / deploy artifacts
+app.html
+index.html
+deploy.sh
+package.json
+package-lock.json
+vercel.json
+
+# Source-of-truth SQL + migrations (applied via supabase CLI, not baked in)
+schema.sql
+seed_questions.sql
+supabase_setup.sql
+migrations/
+supabase/
+
+# Docs
+README.md
+MIGRATIONS.md
+CLAUDE.md
