@@ -132,7 +132,11 @@
     // =====================================================================
     // CONFIG
     // =====================================================================
-    const API_BASE = "http://localhost:8000";
+    // abol-pdf container URL — Fly.io in production, localhost in dev.
+    // Override at the browser via ?api=http://localhost:8765 (query-string
+    // param) for local iteration without rebuilding.
+    const API_BASE = (new URLSearchParams(window.location.search).get("api"))
+                  || "https://abol-pdf.fly.dev";
 
     // =====================================================================
     // SUPABASE CLIENT — data persistence for assessments
@@ -2745,7 +2749,30 @@
                   shows exactly where you fall relative to peers in your sector,
                   and gives you a board-ready action plan with cost estimates.
                 </div>
-                <Btn style={{ padding: "12px 28px" }}>Unlock full report &mdash; {"€"}425</Btn>
+                <Btn
+                  style={{ padding: "12px 28px" }}
+                  onClick={async () => {
+                    try {
+                      const params = new URLSearchParams({ uuid: assessmentId });
+                      if (result.email) params.set("email", result.email);
+                      const resp = await fetch(`${API_BASE}/checkout?${params.toString()}`, {
+                        method: "POST",
+                      });
+                      if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        alert(err.detail || `Checkout failed (HTTP ${resp.status})`);
+                        return;
+                      }
+                      const { url } = await resp.json();
+                      window.location.href = url;
+                    } catch (e) {
+                      alert("Checkout service unreachable. Please try again in a minute.");
+                      console.error("checkout error:", e);
+                    }
+                  }}
+                >
+                  Unlock full report &mdash; {"€"}425
+                </Btn>
               </div>
 
               {/* Actions */}
