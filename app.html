@@ -1808,7 +1808,7 @@
                 {[
                   { name: "Scan", price: "€0", period: "free", cta: "Start free", subCta: "9 min, no login", desc: "Overall score, rating, and peer benchmark. The opening number for your board conversation.", features: ["Overall exposure score", "Sector rating", "Peer benchmark percentile"], action: "scan" },
                   { name: "Full report", price: "€425", period: "one-time", cta: "Start scan → unlock report", subCta: "Scan first, pay after", desc: "40+ page board-ready PDF with complete breakdown, prioritized actions, and quantified investment case.", features: ["Everything in Scan", "Dimension breakdown", "Top 10 critical gaps with euro impact", "Quantified breach-cost exposure", "3-year roadmap with budgets", "Board-ready PDF"], hl: true, action: "scan" },
-                  { name: "Advisory", price: "€6,845", period: "per year", cta: "Subscribe", subCta: "recurring annual · cancel anytime", desc: "Monthly working session with your IT and security directors. Re-scored quarterly. Standing line item on the board agenda.", features: ["Everything in Full", "Monthly working meeting (60 min)", "Quarterly re-assessment", "Regulatory change alerts", "Direct analyst access via Slack/email", "Board memo before each cycle"], action: "stripe-advisory", stripeUrl: "https://buy.stripe.com/test_9B68wJ18T1Xw0XMg6q00000" }
+                  { name: "Advisory", price: "€6,845", period: "per year", cta: "Book intro call", subCta: "WhatsApp · gesprek eerst, pas betalen na kwalificatie", desc: "Monthly working session with your IT and security directors. Re-scored quarterly. Standing line item on the board agenda.", features: ["Everything in Full", "Monthly working meeting (60 min)", "Quarterly re-assessment", "Regulatory change alerts", "Direct analyst access via Slack/email", "Board memo before each cycle"], action: "whatsapp-advisory", whatsappUrl: "https://wa.me/31683559501?text=" + encodeURIComponent("Hi Sam, I'm interested in the ABOL Advisory tier (\u20ac6,845/yr). Could you share 3 options for an intro call so we can discuss fit? Thanks.") }
                 ].map((t, i) => (
                   <Card key={i} style={{
                     padding: 28, position: "relative",
@@ -1831,9 +1831,9 @@
                     <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 18, minHeight: 60 }}>{t.desc}</div>
                     <Btn
                       onClick={() => {
-                        if (t.action === "stripe-advisory") {
-                          if (window.plausible) window.plausible("Advisory subscribe click");
-                          window.location.href = t.stripeUrl;
+                        if (t.action === "whatsapp-advisory") {
+                          if (window.plausible) window.plausible("Advisory WhatsApp click");
+                          window.open(t.whatsappUrl, "_blank", "noopener,noreferrer");
                           return;
                         }
                         if (window.plausible) window.plausible("Pricing CTA click", { props: { tier: t.name } });
