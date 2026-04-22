@@ -63,13 +63,21 @@ const CORS_HEADERS = {
 
 function whitepaperTemplate(): { subject: string; html: string; text: string } {
   return {
-    subject: "You're on the list — ABOL.ai State of EU Cyber 2026",
+    subject: "Your ABOL.ai 2026 AI & Quantum Threat Outlook — preview",
     text: `Thanks for signing up.
 
-You're on the list for the 2026 AI and Quantum Threat Outlook. We'll send it
-the moment the data backs every number. Until then, if you want your own
-numbers today, the 9-minute scan at abol.ai produces a personalized benchmark
-against Thales 2026, IBM 2024, ENISA 2025, and Verizon DBIR 2025.
+Here's the preview of the 2026 AI and Quantum Threat Outlook:
+
+  https://abol.ai/whitepaper-teaser.pdf
+
+It's the executive summary and the seven-pillar glance — the first few pages
+of the full report. The remaining twenty-nine pages (sector deep dives,
+regulatory mapping for NIS2/DORA/EU AI Act, the top 10 priority actions with
+budgets, and the full methodology) are in the paid report.
+
+Want your own numbers benchmarked against Thales 2026, IBM 2024, ENISA 2025
+and Verizon DBIR 2025? The 9-minute scan at https://abol.ai produces a
+personalized report on the spot.
 
 Reply to this email if you have questions.
 
@@ -77,12 +85,12 @@ ABOL.ai
 https://abol.ai
 `,
     html: cardTemplate({
-      kicker: "ABOL.ai · waitlist confirmed",
-      heading: "You're on the list.",
-      body: `<p style="margin:0 0 12px;">Thanks for signing up for the 2026 AI and Quantum Threat Outlook.</p>
-<p style="margin:0 0 12px;">We'll send it the moment the data backs every number. Our bar: every claim in the report is traceable to a public source or a large-enough proprietary cohort. That bar takes time to clear.</p>
-<p style="margin:0;">Want your own numbers today? The 9-minute scan at <a href="https://abol.ai" style="color:#E8650A;">abol.ai</a> produces a personalized benchmark in real time — same 4 sources, applied to your organization.</p>`,
-      cta: { label: "Run the 9-min scan", href: "https://abol.ai" },
+      kicker: "ABOL.ai · 2026 outlook preview",
+      heading: "Your preview is ready.",
+      body: `<p style="margin:0 0 12px;">Here's the preview of the 2026 AI and Quantum Threat Outlook — the executive summary and seven-pillar glance.</p>
+<p style="margin:0 0 12px;">The remaining twenty-nine pages (sector deep dives, NIS2/DORA/EU AI Act mapping, top 10 priority actions with budgets, full methodology) are in the paid report.</p>
+<p style="margin:0;">Want your own numbers, benchmarked against Thales 2026, IBM 2024, ENISA 2025 and Verizon DBIR 2025? The <a href="https://abol.ai" style="color:#E8650A;">9-minute scan</a> produces a personalized report on the spot.</p>`,
+      cta: { label: "Download the preview (PDF)", href: "https://abol.ai/whitepaper-teaser.pdf" },
     }),
   };
 }

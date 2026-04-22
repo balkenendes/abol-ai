@@ -179,6 +179,48 @@ def build_pdf(data: AssessmentData, output_path: Path) -> None:
 
     doc.build(story)
 
+    # Paid report = personalized benchmark + full whitepaper deep dive (Sections 1-12).
+    # If whitepaper_deep_dive.pdf exists alongside, append its pages so the buyer
+    # gets one coherent PDF: their data first, the shared deep content after.
+    # Build it via `python build_assets.py`. Non-fatal if missing.
+    _attach_whitepaper_if_present(output_path)
+
+
+def _attach_whitepaper_if_present(output_path: Path) -> None:
+    """Concat whitepaper_deep_dive.pdf onto the end of output_path.
+
+    No-op if the deep-dive PDF isn't on disk — paid reports still render,
+    just without the appended whitepaper content. Build the deep dive with
+    `python build_assets.py` (one-time, or whenever the source whitepaper
+    updates).
+    """
+    deep_dive = Path("whitepaper_deep_dive.pdf")
+    if not deep_dive.exists():
+        log.info("whitepaper_deep_dive.pdf not found — skipping attach (run build_assets.py)")
+        return
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except ImportError:
+        log.warning("pypdf not installed — skipping whitepaper attach")
+        return
+
+    try:
+        writer = PdfWriter()
+        base = PdfReader(str(output_path))
+        for p in base.pages:
+            writer.add_page(p)
+        extra = PdfReader(str(deep_dive))
+        for p in extra.pages:
+            writer.add_page(p)
+        with output_path.open("wb") as f:
+            writer.write(f)
+        log.info(
+            "attached whitepaper deep dive: %d personalized + %d deep-dive = %d pages total",
+            len(base.pages), len(extra.pages), len(writer.pages),
+        )
+    except Exception as exc:
+        log.warning("whitepaper attach failed (non-fatal): %s", exc)
+
 
 # ============================================================================
 # CLI
