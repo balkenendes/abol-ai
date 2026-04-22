@@ -202,13 +202,13 @@
     }
 
     // Get peer benchmark data (for results page)
+    // Reads from the PII-stripped view. See supabase/003_rls_tighten.sql.
     async function getPeerBenchmark(sector) {
       if (!supabase) return null;
       const { data, error } = await supabase
-        .from('abol_assessments')
+        .from('abol_public_scores')
         .select('dimension_scores, overall_percentage')
-        .eq('sector', sector)
-        .eq('status', 'completed');
+        .eq('sector', sector);
       if (error || !data || data.length < 3) return null;
       // Compute median overall
       const scores = data.map(d => d.overall_percentage).sort((a, b) => a - b);
