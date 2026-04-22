@@ -184,10 +184,14 @@
   <script>
     // Display the Stripe checkout session ID from the URL if present.
     // Stripe Payment Links append ?session_id={CHECKOUT_SESSION_ID} automatically
-    // when the success_url is set to include that template variable.
+    // when the success_url is set to include that template variable. Also
+    // fire the paid_report confirmation email via the Supabase Edge Function,
+    // looking up the buyer's email by assessment UUID (passed as
+    // client_reference_id through Stripe).
     (function() {
       var params = new URLSearchParams(window.location.search);
       var sid = params.get('session_id') || params.get('s') || '';
+      var ref = params.get('client_reference_id') || params.get('uuid') || '';
       var el = document.getElementById('sid');
       if (sid) {
         el.textContent = sid.slice(0, 12) + '…';
@@ -195,6 +199,23 @@
       } else {
         document.getElementById('session-ref').style.display = 'none';
         if (window.plausible) window.plausible('Thanks page view', { props: { has_session: 'no' } });
+      }
+
+      // Fire the paid_report email. The Edge Function looks up the email via
+      // service role using the assessment UUID. Fire-and-forget.
+      if (ref) {
+        var SUPABASE_URL = "https://cnoudltgcxeyzfelvbuv.supabase.co";
+        var ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNub3VkbHRnY3hleXpmZWx2YnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzI3ODEsImV4cCI6MjA4ODgwODc4MX0.QJ_mtGnOBKpMSG34-SA6luuneLv9lV6h0s3gXElOkJY";
+        fetch(SUPABASE_URL + "/functions/v1/send-email", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + ANON,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ type: "paid_report", data: { assessment_id: ref } })
+        }).then(function(r) {
+          if (r.ok && window.plausible) window.plausible("Paid confirmation email sent");
+        }).catch(function(e) { console.warn("paid email error:", e); });
       }
     })();
   </script>

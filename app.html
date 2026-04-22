@@ -279,6 +279,28 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNub3VkbHRnY3hleXpmZWx2YnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyMzI3ODEsImV4cCI6MjA4ODgwODc4MX0.QJ_mtGnOBKpMSG34-SA6luuneLv9lV6h0s3gXElOkJY";
     const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+    // Call the send-email Edge Function. Non-blocking: errors are logged, never
+    // surfaced to the user. The function is idempotent at the Resend level —
+    // double-calls are tolerated.
+    async function sendEmail(type, to, data) {
+      if (!to || !SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+      try {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ type, to, data: data || {} }),
+        });
+        if (!resp.ok) {
+          console.warn("send-email failed:", resp.status, await resp.text());
+        }
+      } catch (e) {
+        console.warn("send-email error:", e);
+      }
+    }
+
     // Hash email with SHA-256 before storing
     async function hashEmail(email) {
       if (!email) return null;
@@ -1751,7 +1773,9 @@
                               });
                             if (error) console.error("Waitlist insert error:", error);
                           }
-                          alert("Thanks — you're on the list. The 2026 AI & Quantum Threat Outlook ships when we have the data to back every number. We'll email you the moment it's live.");
+                          // Fire confirmation email via Edge Function
+                          sendEmail("whitepaper", email, {});
+                          alert("Thanks — you're on the list. Check your inbox for a confirmation. The 2026 AI & Quantum Threat Outlook ships when we have the data to back every number.");
                           input.value = "";
                         } catch (err) {
                           console.error("Waitlist error:", err);
@@ -3414,6 +3438,15 @@
         setResult(res);
         // Save scores to Supabase
         await completeAssessment(assessmentId, res);
+        // Fire scan-result email (fire-and-forget, don't block navigation)
+        if (formData && formData.email) {
+          sendEmail("scan_result", formData.email, {
+            score: res.overall_percentage,
+            rating: res.rating,
+            assessment_id: assessmentId,
+            sector: formData.sector,
+          });
+        }
         setPage("results");
       };
 

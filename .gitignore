@@ -31,3 +31,5 @@ tmp/
 # Supabase CLI local state (regenerates on `supabase link`)
 supabase/.temp/
 supabase/.branches/
+.gstack/
+.env.vercel
