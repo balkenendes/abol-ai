@@ -198,12 +198,69 @@ python -c "import sqlglot; sqlglot.parse(open('migrations/<file>.sql').read(), d
 
 ## Things that are NOT yet wired up (known gaps)
 
-- **Peer benchmark bars on the Results page** — the dimension breakdown shows the user's score but not the sector median / top quartile. Data is queryable from `abol_assessments` once enough rows exist.
-- **PDF generator still reads local Postgres, not Supabase.** `generate_report.py` needs a Supabase data loader (or a scheduled Supabase → Postgres sync) before real-data reports can be produced from production.
-- **No payment integration** (Stripe checkout + webhook to set `is_paid=true` / `payment_reference`).
-- **No email delivery** (Resend / Postmark / SES) — Full Report PDF not yet sent to the buyer.
-- **No auto-trigger:** PDF generation is CLI-only; not yet fired by a Stripe webhook.
-- **FastAPI backend (`main.py`) is not deployed.** It exists as the scoring reference + local dev target, but production runs frontend-direct to Supabase.
+**Sprint 1 closed these (2026-04-22):**
+- ~~Peer benchmark bars on the Results page~~ — live. IBCS-style (solid/your score, vertical line/median, dashed/P75) with per-row source citation. Data from `PEER_DISTRIBUTIONS` (JS, `app.html`) mirroring Python `external_benchmarks.PEER_DISTRIBUTIONS`.
+- ~~PDF generator reads Supabase~~ — live via `report_loaders._load_from_supabase_async`. Score-mismatch verification against `main.py` scoring built in; logs CRITICAL on drift.
+- ~~Observability~~ — `pdf_generations` table logs every PDF gen attempt (start + outcome). Service-role only.
+
+**Sprint 2 remaining:**
+- **Stripe Checkout** — wire the €425 button to a Checkout Session with `client_reference_id=<assessment_uuid>`.
+- **Stripe webhook** — server-side function flips `is_paid=true` + `payment_reference` + triggers the Fly.io container.
+- **Resend email delivery** — signed URL (24h TTL) to the buyer's email.
+- **Webhook idempotency guard** — dedup table keyed on `stripe_event_id` to prevent duplicate PDF gens on Stripe retries.
+
+**Sprint 3+:**
+- `main.py` FastAPI backend retirement (kept as scoring reference only, never deployed).
+- Continuous tier (€1,995/yr) — Stripe Subscriptions + quarterly benchmark refresh.
+- Institutional data licensing pipeline.
+
+## Sprint 1 architecture (reference)
+
+```
+  Browser (abol.ai)                Fly.io abol-pdf container
+  ─────────────────                ─────────────────────────
+  app.html scan                    server.py FastAPI
+  ├─ Supabase INSERT row            ├─ /health  (Supabase ping)
+  ├─ Supabase UPDATE answers       └─ /generate?uuid=<x>
+  ├─ Supabase UPDATE scores              │
+  └─ SELECT abol_public_scores           ▼
+     for peer benchmark                report_loaders
+                                         │
+              ┌──────────────────────────┘
+              ▼
+          Supabase
+          ├─ abol_assessments (RLS: anon blocked on SELECT; UPDATE gated; is_paid server-role only)
+          ├─ abol_public_scores (SECURITY DEFINER view: anon-readable, no PII)
+          └─ pdf_generations (service-role only; observability log)
+
+  CLI (local dev):
+  python generate_report.py --source supabase <uuid>   # prod data
+  python generate_report.py --source postgres <uuid>   # local dev
+  python generate_report.py --demo                     # no deps
+```
+
+## Deployment — Fly.io PDF container
+
+```bash
+# One-time launch
+flyctl launch --no-deploy                          # claims app name "abol-pdf"
+flyctl secrets set \
+    SUPABASE_URL=https://cnoudltgcxeyzfelvbuv.supabase.co \
+    SUPABASE_SERVICE_ROLE_KEY=<from dashboard> \
+    ANTHROPIC_API_KEY=<optional>
+
+# Every subsequent deploy
+flyctl deploy
+
+# Operations
+flyctl logs -a abol-pdf
+flyctl status -a abol-pdf
+flyctl ssh console -a abol-pdf
+```
+
+Container spec: region `ams`, shared-cpu-1x 1GB, concurrency 1, auto_stop after 5min idle. `/health` polled every 30s.
+
+## Deployment — abol.ai (IMPORTANT: NOT pipeloop, separate Vercel project)
 
 ### Deployment — abol.ai (IMPORTANT: NOT pipeloop, separate Vercel project)
 
@@ -221,10 +278,66 @@ If Vercel CLI says "no credentials", run `npx vercel login` first (opens browser
 
 **What's already live:** frontend on Vercel + Supabase persistence (assessment rows write end-to-end). **Remaining for full monetization:** Stripe Checkout → webhook → `generate_report.py` in a container (Cloud Run / Fly.io) reading from Supabase → Resend to email the PDF.
 
+## Runbooks
+
+### Buyer paid via bank transfer, needs PDF (manual Sprint 1 fulfillment)
+
+```bash
+# 1. Verify payment received
+# 2. Flip is_paid via service-role (bypasses RLS)
+export SUPABASE_ACCESS_TOKEN="sbp_..."
+npx supabase db query --linked \
+    "UPDATE abol_assessments SET is_paid=true, payment_reference='wire_<ref>' WHERE id='<uuid>'"
+# 3. Generate PDF
+curl -X POST "https://abol-pdf.fly.dev/generate?uuid=<uuid>" -o /tmp/report.pdf
+# 4. Email manually (Sprint 2 automates via Resend)
+```
+
+### PDF generation failed
+
+```bash
+# 1. Check pdf_generations for the failure row
+npx supabase db query --linked \
+    "SELECT status, error_class, error_message, duration_ms FROM pdf_generations
+     WHERE assessment_id='<uuid>' ORDER BY started_at DESC LIMIT 5"
+# 2. Cross-reference Fly.io logs for stacktrace
+flyctl logs -a abol-pdf | grep "<uuid>"
+# 3. Fallback: regenerate locally
+python generate_report.py --source supabase <uuid>
+```
+
+### Container OOM
+
+Symptoms: `/generate` returns 500 or connection drops mid-render. Fly.io auto-restarts on OOM by default.
+
+1. Check `flyctl status -a abol-pdf` for recent restarts
+2. Check memory in `flyctl metrics -a abol-pdf` — sustained >800MB on 1GB machine signals a real leak, not a transient spike
+3. Mitigation: bump `fly.toml` memory to `2gb` (shared-cpu-1x supports it)
+4. Root cause: ReportLab assembles the full PDF in memory before writing. Very large assessments (future: more questions, embedded images) will grow peak usage. Revisit if memory issues recur on a non-happy-path input.
+
+### RLS regression
+
+If `tests/smoke.sh` RLS assertions fail after a Supabase migration:
+1. Run `supabase/003_rls_tighten.sql` — it's idempotent on the drops, safe to re-apply
+2. Verify policies: `SELECT policyname FROM pg_policies WHERE tablename='abol_assessments'`
+   Expected: "Anon updates own in-progress assessment only" + "Anyone can create assessments"
+3. Verify grants: `SELECT grantee, privilege_type FROM information_schema.role_table_grants WHERE table_name='abol_assessments' AND grantee='anon'` — must NOT include SELECT.
+
 ## Conventions
 
 - Never use Microsoft Edge to open files. Use Chrome (`start chrome <path>` on Windows).
 - Bash on Windows: use forward slashes and `/c/Users/...` paths in shell commands.
 - Don't edit `schema.sql` or `seed_questions.sql` once seeded. Add a numbered migration instead.
-- **`app.html` is the source of truth for question wording.** When adding questions to the database via a migration, copy the exact text/options/scores from the corresponding entry in the `DEMO_QUESTIONS` array in `app.html`. Never let DB and frontend question text drift.
+- **`app.html` is the source of truth for question wording.** When adding questions to the database via a migration, copy the exact text/options/scores from the corresponding entry in the `DEMO_QUESTIONS` array in `app.html`. Also update `report_loaders.QUESTION_CATALOG` in the same PR — that dict is what the Supabase loader uses to reconstruct question_text. Three places total: `app.html` + `seed_questions.sql` + `report_loaders.QUESTION_CATALOG`.
+- **Peer benchmark data (`external_benchmarks.PEER_DISTRIBUTIONS`) mirrors `app.html:PEER_DISTRIBUTIONS`.** Keep them in sync: when Python changes, bump the JS constant in the same PR.
 - When adding new charts to the PDF, follow the IBCS conventions documented above and reuse primitives from `report_charts.py` rather than drawing custom shapes inline in `report_sections.py`.
+- Every PDF generation must write a `pdf_generations` row. `server.py` does this automatically via `_log_generation`; if you add another generation path, include the observability log.
+
+## Testing
+
+Run the regression suite before any PR:
+```bash
+bash tests/smoke.sh
+```
+
+Checks: py_compile (9 modules), demo PDF regression, external_benchmarks 21 combo coverage, 4 RLS assertions against live Supabase, FastAPI wiring. Optional Fly.io live check if `FLY_URL` + `TEST_UUID` are set.
