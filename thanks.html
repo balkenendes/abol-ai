@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanks — ABOL.ai</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Cpath d='M17 2L30 9.5V24.5L17 32L4 24.5V9.5Z' fill='%23E8650A'/%3E%3Cpath d='M8 27L15 7H19L26 27H22L20.4 22.3H13.6L12 27ZM14.8 19L17 12.8L19.2 19Z' fill='white' fill-rule='evenodd'/%3E%3C/svg%3E" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- Plausible analytics -->
+  <script defer data-domain="abol.ai" src="https://plausible.io/js/script.outbound-links.js"></script>
+  <style>
+    :root {
+      --bg: #FAF6EF;
+      --bg-raised: #FFFFFF;
+      --bg-surface: #FDF5E6;
+      --border: #E5DCC8;
+      --border-subtle: #F0E7D4;
+      --text: #14110F;
+      --text-secondary: #4A3E30;
+      --text-muted: #8A7D6A;
+      --accent: #E8650A;
+      --accent-dark: #7C2D12;
+      --sage: #3D6B4F;
+      --font-body: 'Manrope', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { overflow-x: hidden; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 560px;
+      width: 100%;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      padding: 48px 40px;
+    }
+    .brand {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+    .intro {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .status {
+      display: block;
+      padding: 18px 20px;
+      background: var(--bg-surface);
+      border-left: 3px solid var(--accent);
+      margin-bottom: 24px;
+    }
+    .status-label {
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      margin-bottom: 6px;
+    }
+    .status-value {
+      font-size: 15px;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .reference {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      word-break: break-all;
+    }
+    .what-next {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .what-next strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .btn-primary, .btn-secondary {
+      padding: 12px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .footer {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.3px;
+    }
+    @media (max-width: 640px) {
+      .card { padding: 32px 22px; }
+      h1 { font-size: 22px; }
+      .intro { font-size: 14px; }
+      .cta-row { flex-direction: column; }
+      .btn-primary, .btn-secondary { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">ABOL.ai · AI and Quantum Security Index</div>
+    <h1>Thanks for your purchase.</h1>
+    <p class="intro">
+      Your payment was received. We are generating your 43-page benchmark report now.
+      It will arrive at the email address you used at checkout within the next hour,
+      during business hours CET.
+    </p>
+
+    <div class="status">
+      <div class="status-label">Payment status</div>
+      <div class="status-value">Succeeded · receipt sent by Stripe</div>
+      <div class="reference" id="session-ref">Checkout reference: <span id="sid">—</span></div>
+    </div>
+
+    <div class="what-next">
+      <p style="margin-bottom: 12px;"><strong>What happens next:</strong></p>
+      <ol style="padding-left: 20px;">
+        <li style="margin-bottom: 6px;">We compile your personalized 43-page PDF against the four public peer benchmarks (Thales 2026, IBM 2024, ENISA Threat Landscape 2025, Verizon DBIR 2025).</li>
+        <li style="margin-bottom: 6px;">Report arrives by email, attached as PDF. Check your inbox (and spam folder, just in case).</li>
+        <li>If it has not arrived within 2 hours, reply to your Stripe receipt email or send a note to <a href="mailto:info@abol.ai" style="color: var(--accent); text-decoration: underline;">info@abol.ai</a> with your checkout reference.</li>
+      </ol>
+    </div>
+
+    <div class="cta-row">
+      <a href="https://abol.ai" class="btn-primary">Back to abol.ai</a>
+      <a href="mailto:info@abol.ai?subject=Report%20delivery%20question" class="btn-secondary">Contact</a>
+    </div>
+
+    <div class="footer">
+      <a href="https://abol.ai" style="color: var(--text-muted); text-decoration: underline;">abol.ai</a>
+      · info@abol.ai
+      · SHA-256 hashed identifiers · Supabase EU-hosted
+    </div>
+  </div>
+
+  <script>
+    // Display the Stripe checkout session ID from the URL if present.
+    // Stripe Payment Links append ?session_id={CHECKOUT_SESSION_ID} automatically
+    // when the success_url is set to include that template variable.
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var sid = params.get('session_id') || params.get('s') || '';
+      var el = document.getElementById('sid');
+      if (sid) {
+        el.textContent = sid.slice(0, 12) + '…';
+        if (window.plausible) window.plausible('Thanks page view', { props: { has_session: 'yes' } });
+      } else {
+        document.getElementById('session-ref').style.display = 'none';
+        if (window.plausible) window.plausible('Thanks page view', { props: { has_session: 'no' } });
+      }
+    })();
+  </script>
+</body>
+</html>

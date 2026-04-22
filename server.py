@@ -24,7 +24,7 @@ still boots if Stripe isn't configured yet):
     STRIPE_SUCCESS_URL              e.g. https://abol.ai/paid?s={CHECKOUT_SESSION_ID}
     STRIPE_CANCEL_URL               e.g. https://abol.ai
     RESEND_API_KEY                  re_...
-    EMAIL_FROM                      e.g. ABOL.ai <hello@abol.ai>
+    EMAIL_FROM                      e.g. ABOL.ai <info@abol.ai>
 
 Optional env vars:
     ANTHROPIC_API_KEY               Enables LLM executive summary (fallback otherwise)

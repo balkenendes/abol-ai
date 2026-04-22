@@ -93,7 +93,7 @@ Sam Balkenende
 ABOL.ai
 ```
 
-Attach de PDF. Verstuur vanaf je `hello@abol.ai` (of persoonlijke) inbox.
+Attach de PDF. Verstuur vanaf je `info@abol.ai` (of persoonlijke) inbox.
 
 ### Stap 5 — Log de order
 Quick tekstbestand of spreadsheet om bij te houden:

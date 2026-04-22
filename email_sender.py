@@ -17,7 +17,7 @@ HTML template is dry-observational ABOL voice (no hype, no marketing
 fluff). Tone: the board member who walked out of the meeting and wants
 the facts in writing.
 
-Requires env: RESEND_API_KEY, EMAIL_FROM (e.g. `ABOL.ai <hello@abol.ai>`).
+Requires env: RESEND_API_KEY, EMAIL_FROM (e.g. `ABOL.ai <info@abol.ai>`).
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ RESEND_ENDPOINT = "https://api.resend.com/emails"
 
 def _config() -> tuple[str, str]:
     api_key = os.environ.get("RESEND_API_KEY")
-    from_addr = os.environ.get("EMAIL_FROM", "ABOL.ai <hello@abol.ai>")
+    from_addr = os.environ.get("EMAIL_FROM", "ABOL.ai <info@abol.ai>")
     if not api_key:
         raise EmailError("RESEND_API_KEY not set")
     return api_key, from_addr

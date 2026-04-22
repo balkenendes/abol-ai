@@ -3,6 +3,9 @@
   "outputDirectory": ".",
   "framework": null,
   "rewrites": [
+    { "source": "/thanks", "destination": "/thanks.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/methodology", "destination": "/methodology.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
