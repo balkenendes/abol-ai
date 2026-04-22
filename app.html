@@ -222,6 +222,57 @@
       { value: "financial_services", label: "Financial Services", desc: "Banks, insurance, pensions" }
     ];
 
+    // =====================================================================
+    // PEER DISTRIBUTIONS — cold-start benchmark data (per sector x pillar)
+    // Mirror of Python external_benchmarks.PEER_DISTRIBUTIONS. Derived from
+    // Thales 2026, IBM 2024, ENISA TL 2025, Verizon DBIR 2025. Keep in sync
+    // whenever the Python version bumps — both files are the authoritative
+    // ABOL Index cold-start dataset. See external_benchmarks.py docstring.
+    // =====================================================================
+    const PEER_DISTRIBUTIONS = {
+      readiness: {
+        smb:                { median: 24, p25: 16, p75: 32, source: "Thales 2026" },
+        corporate:          { median: 30, p25: 22, p75: 38, source: "Thales 2026" },
+        financial_services: { median: 42, p25: 32, p75: 54, source: "Thales 2026 · ENISA 2025" }
+      },
+      security_measures: {
+        smb:                { median: 43, p25: 32, p75: 54, source: "Verizon DBIR 2025" },
+        corporate:          { median: 54, p25: 42, p75: 66, source: "Verizon DBIR 2025" },
+        financial_services: { median: 67, p25: 54, p75: 80, source: "Verizon DBIR 2025 · ENISA 2025" }
+      },
+      dependencies: {
+        smb:                { median: 36, p25: 26, p75: 46, source: "Thales 2026 · Verizon DBIR 2025" },
+        corporate:          { median: 45, p25: 34, p75: 56, source: "Thales 2026 · Verizon DBIR 2025" },
+        financial_services: { median: 56, p25: 44, p75: 68, source: "Thales 2026 · Verizon DBIR 2025" }
+      },
+      investment: {
+        smb:                { median: 28, p25: 19, p75: 37, source: "Thales 2026 · IBM 2024" },
+        corporate:          { median: 35, p25: 26, p75: 44, source: "Thales 2026 · IBM 2024" },
+        financial_services: { median: 44, p25: 33, p75: 55, source: "Thales 2026 · IBM 2024" }
+      },
+      compliance: {
+        smb:                { median: 34, p25: 24, p75: 44, source: "Thales 2026 · ENISA 2025" },
+        corporate:          { median: 42, p25: 32, p75: 52, source: "Thales 2026 · ENISA 2025" },
+        financial_services: { median: 63, p25: 52, p75: 75, source: "Thales 2026 · ENISA 2025" }
+      },
+      governance: {
+        smb:                { median: 26, p25: 17, p75: 35, source: "Thales 2026" },
+        corporate:          { median: 32, p25: 23, p75: 41, source: "Thales 2026" },
+        financial_services: { median: 48, p25: 37, p75: 60, source: "Thales 2026 · ENISA 2025" }
+      },
+      resilience: {
+        smb:                { median: 32, p25: 22, p75: 42, source: "IBM 2024 · Verizon DBIR 2025" },
+        corporate:          { median: 40, p25: 30, p75: 50, source: "IBM 2024 · Verizon DBIR 2025" },
+        financial_services: { median: 55, p25: 43, p75: 67, source: "IBM 2024 · Verizon DBIR 2025 · ENISA 2025" }
+      }
+    };
+
+    function getPeerMedian(sector, pillar) {
+      const p = PEER_DISTRIBUTIONS[pillar];
+      if (!p) return null;
+      return p[sector] || null;
+    }
+
     const EMP_BUCKETS = [
       { value: "50-100", label: "50\u2013100" },
       { value: "100-500", label: "100\u2013500" },
@@ -2599,30 +2650,86 @@
                 </div>
               </Card>
 
-              {/* Dimension breakdown - VISIBLE in demo */}
+              {/* Dimension breakdown with peer benchmark bars (IBCS conventions) */}
               <Card style={{ padding: 20, marginBottom: 20 }}>
-                <Label color="var(--accent-dark)">Where you're exposed</Label>
+                <Label color="var(--accent-dark)">Where you stand</Label>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 14, lineHeight: 1.5 }}>
+                  Your score against the sector peer median and top-quartile threshold.
+                  Peer data from the ABOL Index cold-start dataset (public sources).
+                </div>
                 {Object.entries(result.dimensions).map(([key, pct]) => {
                   const d = DIM[key];
                   if (!d) return null;
+                  const peer = getPeerMedian(result.sector, key);
+                  const median = peer ? peer.median : null;
+                  const p75 = peer ? peer.p75 : null;
+                  const src = peer ? peer.source : "Peer data pending";
+                  const gap = median != null ? (pct - median) : null;
+                  const gapColor = gap == null ? "var(--text-muted)" : (gap < 0 ? "var(--ibcs-neg)" : "var(--ibcs-pos)");
                   return (
-                    <div key={key} style={{ marginBottom: 14 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{d.icon} {d.label}</div>
-                        <div style={{ fontSize: 12, color: "var(--text)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>
-                          {pct}%
+                    <div key={key} style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid var(--border-subtle)" }}>
+                      {/* Label row */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+                        <div style={{ fontSize: 13, color: "var(--text-secondary)", fontWeight: 500 }}>{d.icon} {d.label}</div>
+                        <div style={{ display: "flex", gap: 14, fontSize: 11, fontFamily: "var(--font-mono)", alignItems: "baseline" }}>
+                          <span style={{ color: "var(--text)", fontWeight: 700, fontSize: 13 }}>{pct}%</span>
+                          {median != null && (
+                            <span style={{ color: "var(--text-muted)" }}>median {median}%</span>
+                          )}
+                          {gap != null && (
+                            <span style={{ color: gapColor, fontWeight: 600 }}>
+                              {gap >= 0 ? "+" : "−"}{Math.abs(gap).toFixed(0)}
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div style={{ height: 6, background: "var(--border)", borderRadius: 3 }}>
+                      {/* Bar row (IBCS: solid AC, outlined BM marker, hatched P75 threshold marker) */}
+                      <div style={{ position: "relative", height: 16, background: "var(--border-subtle)", borderRadius: 1 }}>
+                        {/* Your score (AC: solid dark) */}
                         <div style={{
-                          height: "100%", width: pct + "%",
-                          background: d.color, borderRadius: 3,
+                          position: "absolute", left: 0, top: 0, bottom: 0,
+                          width: Math.min(pct, 100) + "%",
+                          background: d.color, borderRadius: 1,
                           transition: "width 1s ease"
                         }} />
+                        {/* Peer median (BM: outlined marker) */}
+                        {median != null && (
+                          <div style={{
+                            position: "absolute", left: median + "%", top: -2, bottom: -2,
+                            width: 2, background: "var(--ibcs-bm)", zIndex: 2
+                          }} title={"Peer median: " + median + "%"} />
+                        )}
+                        {/* P75 top-quartile (BU: hatched marker) */}
+                        {p75 != null && (
+                          <div style={{
+                            position: "absolute", left: p75 + "%", top: -2, bottom: -2,
+                            width: 2, background: "var(--ibcs-ac)",
+                            borderLeft: "1px dashed var(--ibcs-ac)", zIndex: 2
+                          }} title={"Top quartile threshold: " + p75 + "%"} />
+                        )}
+                      </div>
+                      {/* Source citation */}
+                      <div style={{ fontSize: 9, color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: 4, letterSpacing: 0.3 }}>
+                        source: {src}
                       </div>
                     </div>
                   );
                 })}
+                {/* Legend */}
+                <div style={{ display: "flex", gap: 20, marginTop: 10, fontSize: 10, color: "var(--text-muted)", alignItems: "center", flexWrap: "wrap" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ display: "inline-block", width: 14, height: 8, background: "var(--ibcs-ac)" }} />
+                    Your score
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ display: "inline-block", width: 2, height: 10, background: "var(--ibcs-bm)" }} />
+                    Sector peer median
+                  </span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ display: "inline-block", width: 2, height: 10, background: "var(--ibcs-ac)", borderLeft: "1px dashed var(--ibcs-ac)" }} />
+                    Top-quartile threshold
+                  </span>
+                </div>
               </Card>
 
               {/* Upgrade CTA — framed as risk, not features */}
