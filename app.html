@@ -1599,8 +1599,36 @@
                       ))}
                     </div>
 
-                    {/* Email form */}
-                    <form onSubmit={(e) => { e.preventDefault(); alert("Thanks — report will be sent within the hour."); }} style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                    {/* Email form — saves to Supabase waitlist */}
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const input = e.target.querySelector('input[type="email"]');
+                        const email = input.value.trim();
+                        if (!email) return;
+                        if (window.plausible) window.plausible("Whitepaper signup");
+                        try {
+                          if (supabase) {
+                            const emailHash = await hashEmail(email);
+                            const { error } = await supabase
+                              .from('waitlist')
+                              .insert({
+                                email: email,
+                                email_hash: emailHash,
+                                signup_source: 'whitepaper_landing',
+                                referrer: (document.referrer || '').slice(0, 200)
+                              });
+                            if (error) console.error("Waitlist insert error:", error);
+                          }
+                          alert("Thanks — you're on the list. The 2026 AI & Quantum Threat Outlook ships when we have the data to back every number. We'll email you the moment it's live.");
+                          input.value = "";
+                        } catch (err) {
+                          console.error("Waitlist error:", err);
+                          alert("Something went wrong. Email hello@abol.ai and we'll add you manually.");
+                        }
+                      }}
+                      style={{ display: "flex", gap: 8, marginBottom: 10 }}
+                    >
                       <input
                         type="email"
                         required
@@ -1612,7 +1640,7 @@
                           fontFamily: "var(--font-body)"
                         }}
                       />
-                      <Btn arrow={false} onClick={() => {}}>Send me the PDF</Btn>
+                      <Btn arrow={false} type="submit">Send me the PDF</Btn>
                     </form>
                     <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)", letterSpacing: 0.3 }}>
                       Sent once &middot; No spam &middot; Unsubscribe with one click
@@ -1780,7 +1808,7 @@
                 {[
                   { name: "Scan", price: "€0", period: "free", cta: "Start free", subCta: "9 min, no login", desc: "Overall score, rating, and peer benchmark. The opening number for your board conversation.", features: ["Overall exposure score", "Sector rating", "Peer benchmark percentile"], action: "scan" },
                   { name: "Full report", price: "€425", period: "one-time", cta: "Start scan → unlock report", subCta: "Scan first, pay after", desc: "40+ page board-ready PDF with complete breakdown, prioritized actions, and quantified investment case.", features: ["Everything in Scan", "Dimension breakdown", "Top 10 critical gaps with euro impact", "Quantified breach-cost exposure", "3-year roadmap with budgets", "Board-ready PDF"], hl: true, action: "scan" },
-                  { name: "Advisory", price: "€6,845", period: "per year", cta: "Book intro call", subCta: "hello@abol.ai", desc: "Monthly working session with your IT and security directors. Re-scored quarterly. Standing line item on the board agenda.", features: ["Everything in Full", "Monthly working meeting (60 min)", "Quarterly re-assessment", "Regulatory change alerts", "Direct analyst access via Slack/email", "Board memo before each cycle"], action: "email" }
+                  { name: "Advisory", price: "€6,845", period: "per year", cta: "Subscribe", subCta: "recurring annual · cancel anytime", desc: "Monthly working session with your IT and security directors. Re-scored quarterly. Standing line item on the board agenda.", features: ["Everything in Full", "Monthly working meeting (60 min)", "Quarterly re-assessment", "Regulatory change alerts", "Direct analyst access via Slack/email", "Board memo before each cycle"], action: "stripe-advisory", stripeUrl: "https://buy.stripe.com/test_9B68wJ18T1Xw0XMg6q00000" }
                 ].map((t, i) => (
                   <Card key={i} style={{
                     padding: 28, position: "relative",
@@ -1803,9 +1831,9 @@
                     <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.55, marginBottom: 18, minHeight: 60 }}>{t.desc}</div>
                     <Btn
                       onClick={() => {
-                        if (t.action === "email") {
-                          if (window.plausible) window.plausible("Advisory intro click");
-                          window.location.href = "mailto:hello@abol.ai?subject=ABOL.ai Advisory — intro call&body=Hi Sam,%0D%0A%0D%0AI'd like to book an intro call for the ABOL.ai Advisory tier.%0D%0A%0D%0AOur organization:%0D%0ASector:%0D%0ASize:%0D%0AFocus for the first meeting:%0D%0A%0D%0AThanks.";
+                        if (t.action === "stripe-advisory") {
+                          if (window.plausible) window.plausible("Advisory subscribe click");
+                          window.location.href = t.stripeUrl;
                           return;
                         }
                         if (window.plausible) window.plausible("Pricing CTA click", { props: { tier: t.name } });
@@ -2773,32 +2801,16 @@
                 </div>
                 <Btn
                   style={{ padding: "12px 28px" }}
-                  onClick={async () => {
+                  onClick={() => {
                     if (window.plausible) window.plausible("Unlock click", { props: { sector: result.sector, rating: result.rating } });
-                    try {
-                      const params = new URLSearchParams({ uuid: assessmentId });
-                      if (result.email) params.set("email", result.email);
-                      const resp = await fetch(`${API_BASE}/checkout?${params.toString()}`, {
-                        method: "POST",
-                      });
-                      if (resp.status === 503) {
-                        if (window.plausible) window.plausible("Unlock waitlist (service down)");
-                        window.location.href = "mailto:hello@abol.ai?subject=Full report — assessment " + assessmentId.slice(0,8) + "&body=" + encodeURIComponent("Hi Sam,\n\nI'd like the full report for assessment " + assessmentId + ". Please send when the purchase flow is live.\n\nScore: " + result.overall_percentage + "% (" + result.rating + ")\n\nThanks.");
-                        return;
-                      }
-                      if (!resp.ok) {
-                        const err = await resp.json().catch(() => ({}));
-                        alert(err.detail || `Checkout failed (HTTP ${resp.status}). Email hello@abol.ai for manual fulfilment.`);
-                        return;
-                      }
-                      const { url } = await resp.json();
-                      window.location.href = url;
-                    } catch (e) {
-                      if (window.plausible) window.plausible("Unlock waitlist (network)");
-                      // Fly not reachable — fall back to email so buyer intent isn't lost
-                      window.location.href = "mailto:hello@abol.ai?subject=Full report — assessment " + assessmentId.slice(0,8) + "&body=" + encodeURIComponent("Hi Sam,\n\nI'd like the full report for assessment " + assessmentId + ". The purchase flow wasn't reachable — please send the report manually or tell me when it's live.\n\nScore: " + result.overall_percentage + "% (" + result.rating + ")\n\nThanks.");
-                      console.error("checkout error:", e);
-                    }
+                    // Stripe Payment Link for Full Report €425. client_reference_id
+                    // carries the assessment UUID through Stripe so Sam can match
+                    // payment to assessment in the notification email. prefilled_email
+                    // skips one field for the buyer.
+                    const base = "https://buy.stripe.com/test_fZueV7cRBau221QdYi00001";
+                    const params = new URLSearchParams({ client_reference_id: assessmentId });
+                    if (result.email) params.set("prefilled_email", result.email);
+                    window.location.href = base + "?" + params.toString();
                   }}
                 >
                   Unlock full report &mdash; {"€"}425
