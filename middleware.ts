@@ -15,10 +15,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL('/abol.html', request.url))
   }
 
-  // ── Root → serve readiness assessment as homepage (pipeloop.ai) ──
-  if (request.nextUrl.pathname === '/') {
+  // ── /readiness → legacy 5 Outbound Traps assessment (still available) ──
+  if (request.nextUrl.pathname === '/readiness' || request.nextUrl.pathname === '/readiness/') {
     return NextResponse.rewrite(new URL('/readiness.html', request.url))
   }
+  // Root `/` is now the e-commerce audit homepage (app/page.tsx). No rewrite.
 
   // ── Demo bypass: cookie "pipeloop_demo" lets you skip auth entirely ──
   const demoCookie = request.cookies.get('pipeloop_demo')?.value
@@ -58,5 +59,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/abol', '/abol/', '/dashboard/:path*', '/login'],
+  matcher: ['/abol', '/abol/', '/readiness', '/readiness/', '/dashboard/:path*', '/login'],
 }
