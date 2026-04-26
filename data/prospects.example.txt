@@ -1,0 +1,7 @@
+# Pipeloop outreach prospect list.
+# Format: <store-url>,<owner-email>[,<owner-name>]
+# Lines starting with # are ignored. Empty lines are ignored.
+# Replace the examples below with real prospects (Magento 1.x stores preferred).
+#
+# https://magentoshop.example,owner@magentoshop.example,Jane Doe
+# https://oldwoocommerce.example,info@oldwoocommerce.example
